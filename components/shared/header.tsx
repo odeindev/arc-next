@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Container } from './container';
 import Button from '../ui/button';
-import LoginForm from '../ui/loginForm';
-import RegistrationForm from '../ui/registrationForm';
+import LoginForm from '../ui/login-form';
+import RegistrationForm from '../ui/registration-form';
 import { navLinks } from '@/public/index.js';
 
 type FormType = 'login' | 'register' | null;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Mulish, Chakra_Petch } from "next/font/google";
 import "./globals.css";
+import { Header } from '../components/shared/header'
 
 const mulish = Mulish({
   variable: "--font-mulish",
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="ru" className={mulish.className}>
       <body className="antialiased bg-black">
         <main className="min-h-screen">
+        <Header />
         {children}  
         </main>  
       </body>

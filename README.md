@@ -1,12 +1,5 @@
-// Для себя
-# Базовая установка
+## Описание проекта
 
-// Установка Next.js вместе с shadcn/ui
-1. https://ui.shadcn.com/docs/installation/next
-В моем случае я сделал так:
-# :: 
-npx create-next-app@latest . --typescript --tailwind --eslint
-npx shadcn@latest init
-No | Yes | No | No
+Прототип сайта для Майнкрафт-сервера
 
-2. Удаляем стандартные стили и настраиваем свои
+## indev...

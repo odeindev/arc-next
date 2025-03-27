@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import Button from './button';
-import Modal from '../shared/modal';
+import { Button, Modal } from '../shared/index';
 
 interface LoginFormProps {
   isOpen: boolean;
@@ -127,4 +126,4 @@ const LoginForm: React.FC<LoginFormProps> = ({
   );
 };
 
-export default LoginForm;
+export { LoginForm };

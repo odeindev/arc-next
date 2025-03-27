@@ -5,10 +5,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from "next/link";
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
-import { Container } from './container';
-import Button from '../ui/button';
-import LoginForm from '../ui/login-form';
-import RegistrationForm from '../ui/registration-form';
+import { Container, Button } from './index';
+import { LoginForm, RegistrationForm } from '../ui/index';
 import { navLinks } from '@/public/index.js';
 
 type FormType = 'login' | 'register' | null;

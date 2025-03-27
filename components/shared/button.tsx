@@ -49,7 +49,7 @@ const colorClasses = {
   }
 } as const;
 
-const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   color,
   text,
   href,
@@ -141,5 +141,3 @@ const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
-
-export default Button;

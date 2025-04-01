@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
 
 interface LoginFormProps {
@@ -14,6 +15,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   closeForm, 
   setIsAnyFormOpen 
 }) => {
+  const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
@@ -31,7 +33,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
       });
   
       if (!response.ok) {
-        throw new Error('Ошибка авторизации');
+        // Если ошибка сервера (500), перенаправляем на страницу ошибки
+        if (response.status === 500) {
+          router.replace('/500');
+          return;
+        }
+
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка авторизации');
       }
   
       const { token } = await response.json();
@@ -47,10 +56,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
     } catch (error) {
       if (error instanceof Error) {
         console.error('Ошибка авторизации', error.message);
-        setError('Ошибка авторизации. Проверьте свои данные и попробуйте снова.');
+        setError(error.message || 'Ошибка авторизации. Проверьте свои данные и попробуйте снова.');
       } else {
         console.error('Неизвестная ошибка', error);
-        setError('Произошла неизвестная ошибка.');
+        router.replace('/500');
       }
     }
   };
@@ -114,7 +123,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
             />
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <p className="text-[rgba(239,68,68,0.6)] px-4 py-1 text-center text-sm bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white">
+              {error}
+            </p>
+          )}
         <div className="flex justify-around">
           <Button
             color="green"

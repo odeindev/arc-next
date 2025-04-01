@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
 
 interface RegistrationFormProps {
@@ -14,6 +15,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   closeForm, 
   setIsAnyFormOpen 
 }) => {
+  const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -37,7 +39,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Ошибка регистрации');
+        // Если ошибка сервера (500), перенаправляем на страницу ошибки
+        if (response.status === 500) {
+          router.replace('/500');
+          return;
+        }
+
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка регистрации');
       }
 
       const { token } = await response.json();
@@ -51,10 +60,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     } catch (error) {
       if (error instanceof Error) {
         console.error('Ошибка регистрации', error.message);
-        setError('Ошибка регистрации. Проверьте свои данные и попробуйте снова.');
+        setError(error.message || 'Ошибка регистрации. Проверьте свои данные и попробуйте снова.');
       } else {
         console.error('Неизвестная ошибка', error);
-        setError('Произошла неизвестная ошибка.');
+        router.replace('/500');
       }
     }
   };
@@ -124,9 +133,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             />
           </div>
         </div>
-
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-
+        {error && (
+            <p className="text-[rgba(239,68,68,0.6)] px-4 py-1 text-center text-sm bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white">
+              {error}
+            </p>
+          )}
         <div className="flex justify-around">
           <Button
             color="blue"

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
+import { VerificationForm } from './verification-form';
 
 interface RegistrationFormProps {
   isOpen: boolean;
@@ -20,12 +21,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [error, setError] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showVerification, setShowVerification] = React.useState(false);
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
   
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
+      setIsSubmitting(false);
       return;
     }
   
@@ -49,14 +55,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         throw new Error(errorData.error || 'Ошибка регистрации');
       }
 
-      const { token } = await response.json();
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', token);
-      }
-
-      closeForm();
-      setIsAnyFormOpen(false);
+      // Успешная регистрация, показываем форму верификации
+      setShowVerification(true);
     } catch (error) {
       if (error instanceof Error) {
         console.error('Ошибка регистрации', error.message);
@@ -65,6 +65,8 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         console.error('Неизвестная ошибка', error);
         router.replace('/500');
       }
+    } finally {
+      setIsSubmitting(true);
     }
   };
 
@@ -72,6 +74,24 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     closeForm();
     setIsAnyFormOpen(false);
   };
+
+  // Закрыть форму верификации и форму регистрации
+  const handleVerificationClose = () => {
+    setShowVerification(false);
+    closeForm();
+    setIsAnyFormOpen(false);
+  };
+
+  // Если показываем форму верификации, то рендерим её вместо формы регистрации
+  if (showVerification) {
+    return (
+      <VerificationForm 
+        isOpen={showVerification}
+        closeForm={handleVerificationClose}
+        email={email}
+      />
+    );
+  }
 
   return (
     <Modal 
@@ -134,14 +154,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
         </div>
         {error && (
-            <p className="text-[rgba(239,68,68,0.6)] px-4 py-1 text-center text-sm bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white">
-              {error}
-            </p>
-          )}
+          <p className="text-[rgba(239,68,68,0.6)] px-4 py-1 text-center text-sm bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white">
+            {error}
+          </p>
+        )}
         <div className="flex justify-around">
           <Button
             color="blue"
             text="Зарегистрироваться"
+            disabled={isSubmitting}
           />
         </div>
       </form>

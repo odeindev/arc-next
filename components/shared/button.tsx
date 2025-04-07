@@ -8,6 +8,7 @@ interface ButtonProps {
   href?: string;
   onClick?: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 const colorClasses = {
@@ -54,7 +55,8 @@ export const Button: React.FC<ButtonProps> = ({
   text,
   href,
   onClick,
-  className = ''
+  className = '',
+  disabled = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -71,23 +73,24 @@ export const Button: React.FC<ButtonProps> = ({
       }
     };
 
-    if (isHovered) {
+    if (isHovered && !disabled) {
       window.addEventListener('mousemove', updateMousePosition);
     }
 
     return () => {
       window.removeEventListener('mousemove', updateMousePosition);
     };
-  }, [isHovered]);
+  }, [isHovered, disabled]);
 
   const colorConfig = colorClasses[color];
 
   return (
     <button
       ref={buttonRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => !disabled && setIsHovered(false)}
+      onClick={!disabled ? onClick : undefined}
+      disabled={disabled}
       className={`
         relative 
         inline-block 
@@ -97,47 +100,55 @@ export const Button: React.FC<ButtonProps> = ({
         text-white 
         rounded-[4px] 
         border 
-        cursor-pointer 
         overflow-hidden 
         transition-all 
         duration-300 
         ease-in-out 
-        hover:scale-105 
+        ${!disabled ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-50'}
         bg-gradient-to-r 
         ${colorConfig.gradient}
         ${colorConfig.border}
-        ${colorConfig.boxShadow}
+        ${!disabled && colorConfig.boxShadow}
         ${className}
       `}
-      style={{
-        '--mouse-x': `${mousePosition.x}px`,
-        '--mouse-y': `${mousePosition.y}px`,
-      } as React.CSSProperties}
+      style={
+        !disabled
+          ? ({
+              '--mouse-x': `${mousePosition.x}px`,
+              '--mouse-y': `${mousePosition.y}px`,
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       {href ? (
-        <a href={href} className="relative z-10 text-shadow-sm">
+        <a
+          href={disabled ? undefined : href}
+          className="relative z-10 text-shadow-sm pointer-events-none"
+        >
           {text}
         </a>
       ) : (
         <span className="relative z-10 text-shadow-sm">{text}</span>
       )}
 
-      <div
-        className={`
-          absolute 
-          inset-0 
-          transition-opacity 
-          duration-300 
-          ${isHovered ? 'opacity-100' : 'opacity-0'}
-        `}
-        style={{
-          background: `radial-gradient(
-            circle 100px at var(--mouse-x) var(--mouse-y), 
-            ${colorConfig.glowColor}, 
-            transparent 60%
-          )`,
-        }}
-      />
+      {!disabled && (
+        <div
+          className={`
+            absolute 
+            inset-0 
+            transition-opacity 
+            duration-300 
+            ${isHovered ? 'opacity-100' : 'opacity-0'}
+          `}
+          style={{
+            background: `radial-gradient(
+              circle 100px at var(--mouse-x) var(--mouse-y), 
+              ${colorConfig.glowColor}, 
+              transparent 60%
+            )`,
+          }}
+        />
+      )}
     </button>
   );
 };

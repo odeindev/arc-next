@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Mulish, Chakra_Petch } from "next/font/google";
 import "./globals.css";
 import { Header } from '../components/shared/header'
+import { Footer } from "@/components/shared/footer";
 
 const mulish = Mulish({
   variable: "--font-mulish",
@@ -31,6 +32,7 @@ export default function RootLayout({
         <main className="min-h-screen">
         <Header />
         {children}  
+        <Footer />
         </main>  
       </body>
     </html>

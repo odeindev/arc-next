@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Container, Button } from './index';
 import { LoginForm, RegistrationForm } from '../ui/index';
-import { navLinks } from '@/public/index.js';
+import { navLinks } from '@/public/data/links'; // Обновленный импорт
 
 type FormType = 'login' | 'register' | null;
 
@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       "flex flex-col list-none text-white font-semibold",
       isMobile ? "gap-8 items-center" : "md:flex-row gap-6"
     )}>
-      {navLinks?.[0]?.links?.map((link, index) => (
+      {navLinks.map((link, index) => (
         <li key={index}>
           <a 
             href={link.href} 

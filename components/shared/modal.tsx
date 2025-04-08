@@ -19,7 +19,6 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   logoSrc = '/icons/logo.svg'
 }) => {
-  // Закрытие формы при нажатии на клавишу "Esc"
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -33,23 +32,13 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [onClose]);
 
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target instanceof HTMLElement && e.target.id === 'modal-overlay') {
-      onClose();
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
     <div
-      id='modal-overlay'
-      className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-300 ${
-        isOpen ? 'modal-enter' : 'modal-exit'
-      }`}
-      onClick={handleOverlayClick}
+      className={`fixed inset-0 flex items-center justify-center z-50 bg-black/60 transition-opacity duration-300`}
     >
-      <div className="flex min-h-[320px] flex-col justify-center px-6 py-8 lg:px-10 rounded-xl bg-slate-800/95">
+      <div className="flex min-h-[320px] flex-col justify-center px-6 py-8 lg:px-10 rounded-xl bg-slate-900">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <div className='flex justify-end'>
             <X

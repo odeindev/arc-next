@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '../components/shared';
+import { Button } from '.';
 
-interface ErrorPageProps {
+interface ErrorSectionProps {
   code: string;
   title: string;
   description: string;
@@ -18,7 +18,7 @@ interface ErrorPageProps {
   };
 }
 
-export const ErrorPage: React.FC<ErrorPageProps> = ({
+export const ErrorSection: React.FC<ErrorSectionProps> = ({
   code,
   title,
   description,
@@ -69,4 +69,4 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
   );
 };
 
-export default ErrorPage;
+export default ErrorSection;

@@ -47,7 +47,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       if (!response.ok) {
         // Если ошибка сервера (500), перенаправляем на страницу ошибки
         if (response.status === 500) {
-          router.replace('/500');
+          router.replace('/error');
           return;
         }
 
@@ -63,7 +63,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         setError(error.message || 'Ошибка регистрации. Проверьте свои данные и попробуйте снова.');
       } else {
         console.error('Неизвестная ошибка', error);
-        router.replace('/500');
+        router.replace('/error');
       }
     } finally {
       setIsSubmitting(true);

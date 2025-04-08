@@ -1,4 +1,4 @@
-import ErrorPage from '../../pages/ErrorPage';
+import ErrorPage from '../components/shared/error-section';
 
 export const NotFoundPage = () => (
   <ErrorPage 

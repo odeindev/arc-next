@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '../../components/shared/button';
+import { cn } from '@/components/shared/lib/utils';
+import { Button } from '../../components/shared/ui/button';
 import Image from 'next/image';
 import { UserCircle, Coins, Ghost, Clock, Calendar, LogIn, ShoppingCart, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';

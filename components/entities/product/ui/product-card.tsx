@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/shared';
+import { Button } from '@/components/shared/ui';
 import { Product } from '@/public/data/products';
 import { ShoppingCart, MinusCircle, PlusCircle, Info } from 'lucide-react';
 
@@ -79,26 +79,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </p>
 
         {/* Кнопки */}
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 items-center">
           <Button 
             color="blue" 
-            className="flex-1 py-2.5 flex items-center justify-center gap-2 text-sm font-medium" 
+            className="flex-1 py-1 flex items-center justify-center gap-1 text-sm font-medium" 
             onClick={() => onOpenModal(product)}
-            icon={<Info size={18} className="ml-1" />}
+            icon={<Info size={18} className="" />}
             text="Подробнее"
           />
 
           {isInCart ? (
             <Button 
               color="red" 
-              className="p-2.5 rounded-lg flex-shrink-0" 
+              className="p-1 rounded-lg flex-shrink-0" 
               onClick={onRemoveFromCart}
               icon={<MinusCircle size={20} />}
             />
           ) : (
             <Button 
               color="green" 
-              className="p-2.5 rounded-lg flex-shrink-0" 
+              className="p-1 rounded-lg flex-shrink-0" 
               onClick={onAddToCart}
               icon={<PlusCircle size={20} />}
             />

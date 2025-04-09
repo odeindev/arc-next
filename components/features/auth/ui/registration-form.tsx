@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Modal } from '../shared/index';
+import { Button } from '@/components/shared/ui';
+import { Modal } from '@/components/shared/'
 import { VerificationForm } from './verification-form';
-import { useAuth } from '@/context/auth-context';
+import { useAuth } from '@/components/shared/context/auth-context';
 
 interface RegistrationFormProps {
   isOpen: boolean;

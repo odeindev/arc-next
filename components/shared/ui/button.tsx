@@ -10,7 +10,6 @@ interface ButtonProps {
   className?: string;
   disabled?: boolean;
   children?: ReactNode;
-  // Добавляем поддержку иконки
   icon?: ReactNode;
 }
 

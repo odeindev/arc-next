@@ -1,7 +1,7 @@
 // @app/api/auth/resend-code/route.ts
-import { prisma } from '@/prisma/prisma-client';
+import { prisma } from '@/components/shared/lib/prisma/prisma-client';
 import { NextResponse } from 'next/server';
-import { generateVerificationCode, sendVerificationEmail } from '@/lib/email';
+import { generateVerificationCode, sendVerificationEmail } from '@/components/shared/lib/email';
 
 export async function POST(req: Request) {
   try {

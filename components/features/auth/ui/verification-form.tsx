@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Modal } from '../shared/index';
+import { Button } from '@/components/shared/ui';
+import { Modal } from '@/components/shared';
 import { signIn } from 'next-auth/react';
 
 interface VerificationFormProps {

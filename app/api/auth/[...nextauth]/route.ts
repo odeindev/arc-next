@@ -1,6 +1,6 @@
 //@app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
-import { authOptions } from '@/components/constants/auth-options';
+import { authOptions } from '@/components/shared/config/auth-options';
 
 const handler = NextAuth(authOptions);
 

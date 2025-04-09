@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '.';
+import { cn } from '@/components/shared/lib/utils';
+import { Button } from '@/components/shared/ui';
 
 interface ErrorSectionProps {
   code: string;

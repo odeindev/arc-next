@@ -1,10 +1,10 @@
-// components/RulesPage.tsx
+// @app/rules/RulesPage.tsx
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/components/shared/lib/utils';
 import { RulesCollection } from '../../public/index';
-import { ContentSection } from '../../components/shared/content-section';
+import { ContentSection } from '../../components/shared/ui/content-section';
 import { AlertTriangle, Search, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -92,7 +92,7 @@ export const RulesPage: React.FC<Props> = ({ className }) => {
     const element = sectionRefs.current[sectionId];
     if (element) {
       // Упрощенный расчет позиции с фиксированным отступом
-      const headerOffset = -300; // Отступ сверху
+      const headerOffset = -400; // Отступ сверху
       const targetPosition = element.offsetTop - headerOffset;
       
       window.scrollTo({
@@ -194,7 +194,7 @@ export const RulesPage: React.FC<Props> = ({ className }) => {
                   <div className="w-3 h-3 bg-orange-400 rounded-full mr-3"></div>
                   <h2 className="text-xl text-orange-400 font-bold">{section.title}</h2>
                 </div>
-                <ul className="space-y-3">
+                <ul className="space-y-3 py-6">
                   {section.rules.map((rule, ruleIndex) => (
                     <motion.li 
                       key={ruleIndex} 
@@ -204,9 +204,7 @@ export const RulesPage: React.FC<Props> = ({ className }) => {
                       className="bg-slate-700/30 rounded-lg p-4 hover:bg-slate-700/50 transition-colors text-slate-300 border-l-2 border-slate-600 group"
                     >
                       <div className="flex">
-                        {/* Убрали нумерацию правил */}
                         <span className="text-slate-300 group-hover:text-white transition-colors">
-                          {/* Highlight search matches */}
                           {searchQuery ? (
                             <>
                               {rule.split(new RegExp(`(${searchQuery})`, 'gi')).map((part, i) => 

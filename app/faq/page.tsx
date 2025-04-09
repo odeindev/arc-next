@@ -1,9 +1,10 @@
+// @app/rules/FAGPage.tsx
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/components/shared/lib/utils';
 import { FAQCollection, FAQExtraNote } from '../../public/index';
-import { ContentSection } from '../../components/shared/content-section';
+import { ContentSection } from '../../components/shared/ui/content-section';
 import { HelpCircle, ChevronDown, Search, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

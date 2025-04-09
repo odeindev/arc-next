@@ -1,8 +1,8 @@
 // @app/api/auth/register/route.ts
-import { prisma } from '@/prisma/prisma-client';
+import { prisma } from '@/components/shared/lib/prisma/prisma-client';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
-import { generateVerificationCode, sendVerificationEmail } from '@/lib/email';
+import { generateVerificationCode, sendVerificationEmail } from '@/components/shared/lib/email';
 
 export async function POST(req: Request) {
   try {

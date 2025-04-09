@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/components/shared/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { socialLinks } from '@/public/data/links'; // Обновленный импорт

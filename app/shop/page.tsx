@@ -1,11 +1,12 @@
+// @app/rules/ShopPage.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/components/shared/lib/utils';
 import Image from 'next/image';
-import { Button, ContentSection } from '../../components/shared';
+import { Button, ContentSection } from '@/components/shared/ui';
 import { Product, products } from '../../public/data/products';
-import { ProductCard } from '../../components/shared/product-card';
+import { ProductCard } from '../../components/entities/product/ui/product-card';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import useCartStore from '../../components/store/useCartStore';

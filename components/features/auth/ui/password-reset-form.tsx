@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Modal } from '../shared/index';
+import { Button } from '@/components/shared/ui';
+import { Modal } from '@/components/shared';
 import { toast } from 'react-hot-toast';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';

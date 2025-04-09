@@ -1,5 +1,5 @@
 // @app/api/auth/verify-email/route.ts
-import { prisma } from '@/prisma/prisma-client';
+import { prisma } from '@/components/shared/lib/prisma/prisma-client';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {

@@ -1,7 +1,7 @@
 // app/api/auth/update-password/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Хешируем новый пароль
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
 
     // Обновляем пароль и очищаем токен сброса
     await prisma.user.update({

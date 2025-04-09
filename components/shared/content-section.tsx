@@ -5,7 +5,7 @@ import Image from 'next/image';
 interface ContentSectionProps {
   title: string;
   iconSrc: string;
-  iconAlt: string;
+  iconAlt?: string;
   className?: string;
   children: ReactNode;
 }
@@ -22,7 +22,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
       <div className='flex flex-col items-center pt-8 pb-6 space-y-4'>
         <Image
           src={iconSrc}
-          alt={iconAlt}
+          alt={iconAlt ?? 'иконка'}
           className='mx-auto animate-pulse'
           width={80}
           height={80}

@@ -1,101 +1,98 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
+import { signIn } from 'next-auth/react';
 
 interface VerificationFormProps {
   isOpen: boolean;
   closeForm: () => void;
   email: string;
+  initialCode?: string | null;
 }
 
 const VerificationForm: React.FC<VerificationFormProps> = ({ 
   isOpen, 
   closeForm, 
-  email 
+  email,
+  initialCode
 }) => {
   const router = useRouter();
-  const [code, setCode] = React.useState('');
-  const [error, setError] = React.useState('');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isResending, setIsResending] = React.useState(false);
+  const [verificationCode, setVerificationCode] = useState(initialCode || '');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // Если код был передан в пропсах (для режима разработки), автоматически заполняем поле
+  useEffect(() => {
+    if (initialCode) {
+      setVerificationCode(initialCode);
+    }
+  }, [initialCode]);
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
-  
+
     try {
-      const response = await fetch('/api/auth/verify', {
+      // Отправляем запрос на верификацию email
+      const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, code }) // Исправлено с verificationCode на code
+        body: JSON.stringify({ 
+          email, 
+          code: verificationCode 
+        })
       });
 
       if (!response.ok) {
-        // Если ошибка сервера (500), перенаправляем на страницу ошибки
-        if (response.status === 500) {
-          router.replace('/500');
-          return;
-        }
-
         const errorData = await response.json();
         throw new Error(errorData.error || 'Ошибка верификации');
       }
 
-      // Успешная верификация, перенаправляем на страницу входа
-      router.replace('/login?verified=true');
+      // Показываем сообщение об успехе
+      setSuccess(true);
+      
+      // Автоматически входим в систему после верификации
+      setTimeout(async () => {
+        try {
+          // Выполняем вход по credentials
+          const signInResult = await signIn('credentials', {
+            email,
+            // Здесь можно передать пароль обратно, если он у вас сохранен в состоянии формы регистрации
+            // Либо можно реализовать автоматический вход через одноразовый токен, сохраненный в сессии
+            redirect: false,
+            callbackUrl: '/account'
+          });
+
+          if (signInResult?.ok) {
+            // Закрываем форму и перенаправляем на страницу аккаунта
+            closeForm();
+            router.push('/account');
+          } else {
+            // Если автовход не удался, перенаправляем на страницу входа
+            closeForm();
+            router.push('/auth/login');
+          }
+        } catch (signInError) {
+          console.error('Ошибка автоматического входа:', signInError);
+          closeForm();
+          router.push('/auth/login');
+        }
+      }, 2000);
+      
     } catch (error) {
       if (error instanceof Error) {
-        console.error('Ошибка верификации', error.message);
         setError(error.message || 'Ошибка верификации. Проверьте код и попробуйте снова.');
       } else {
-        console.error('Неизвестная ошибка', error);
-        router.replace('/500');
+        setError('Произошла неизвестная ошибка. Пожалуйста, попробуйте позже.');
       }
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setError('');
-    setIsResending(true);
-    
-    try {
-      const response = await fetch('/api/auth/resend-code', { // Исправлен путь API
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email })
-      });
-
-      if (!response.ok) {
-        if (response.status === 500) {
-          router.replace('/500');
-          return;
-        }
-
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при отправке кода');
-      }
-
-      // Показываем сообщение об успешной отправке
-      setError('Новый код отправлен на вашу почту');
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Ошибка при повторной отправке', error.message);
-        setError(error.message || 'Не удалось отправить код. Попробуйте позже.');
-      } else {
-        console.error('Неизвестная ошибка', error);
-        router.replace('/500');
-      }
-    } finally {
-      setIsResending(false);
     }
   };
 
@@ -103,16 +100,19 @@ const VerificationForm: React.FC<VerificationFormProps> = ({
     <Modal 
       isOpen={isOpen} 
       onClose={closeForm} 
-      title="Подтверждение аккаунта"
+      title="Подтверждение email"
     >
-      <div className="space-y-4">
-        <p className="text-white text-sm text-center">
-          Мы отправили код подтверждения на адрес <span className="font-medium">{email}</span>. 
-          Пожалуйста, проверьте вашу электронную почту и введите код ниже.
-        </p>
-
+      {success ? (
+        <div className="text-center">
+          <p className="text-green-400 mb-4">Email успешно подтвержден!</p>
+          <p className="text-white">Переадресация на страницу аккаунта...</p>
+        </div>
+      ) : (
         <form className="space-y-6" onSubmit={handleFormSubmit}>
           <div>
+            <p className="text-white mb-4">
+              Код подтверждения отправлен на email: <strong>{email}</strong>
+            </p>
             <label htmlFor="verification-code" className="block text-sm font-medium leading-6 text-white">
               Код подтверждения
             </label>
@@ -121,38 +121,29 @@ const VerificationForm: React.FC<VerificationFormProps> = ({
                 id="verification-code"
                 name="verification-code"
                 type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
                 required
-                placeholder="Введите код"
                 className="px-2 bg-amber-50 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
             </div>
           </div>
-
+          
           {error && (
-            <p className={`text-sm px-4 py-1 text-center bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white ${error.includes('Новый код') ? 'text-green-400' : 'text-[rgba(239,68,68,0.6)]'}`}>
+            <p className="text-[rgba(239,68,68,0.6)] px-4 py-1 text-center text-sm bg-slate-900 rounded-md transition-all duration-300 ease-in-out hover:bg-slate-700 hover:text-white">
               {error}
             </p>
           )}
-
-          <div className="flex flex-col space-y-3">
+          
+          <div className="flex justify-around">
             <Button
-              color="blue"
+              color="green"
               text="Подтвердить"
               disabled={isSubmitting}
             />
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={isResending}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors self-center cursor-pointer"
-            >
-              {isResending ? 'Отправка...' : 'Отправить код повторно'}
-            </button>
           </div>
         </form>
-      </div>
+      )}
     </Modal>
   );
 };

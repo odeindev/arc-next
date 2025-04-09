@@ -3,6 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
+import { PasswordResetForm } from './password-reset-form';
+import { signIn } from 'next-auth/react';
 
 interface LoginFormProps {
   isOpen: boolean;
@@ -19,48 +21,51 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
+  const [isResetFormOpen, setIsResetFormOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password })
-      });
-  
-      if (!response.ok) {
-        // Если ошибка сервера (500), перенаправляем на страницу ошибки
-        if (response.status === 500) {
-          router.replace('/500');
-          return;
-        }
+    setError(null);
+    setIsLoading(true);
 
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка авторизации');
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false, // Отключаем автоматический редирект для обработки ошибок
+      });
+
+      if (!result?.ok) {
+        throw new Error(result?.error || 'Ошибка авторизации');
       }
-  
-      const { token } = await response.json();
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', token);
-      }
-  
+
+      // Закрываем форму
       closeForm();
       if (setIsAnyFormOpen) {
         setIsAnyFormOpen(false);
       }
+      
+      // Перенаправляем на страницу аккаунта
+      router.push('/account');
+      router.refresh(); // Обновляем страницу для применения изменений состояния авторизации
+      
     } catch (error) {
       if (error instanceof Error) {
         console.error('Ошибка авторизации', error.message);
-        setError(error.message || 'Ошибка авторизации. Проверьте свои данные и попробуйте снова.');
+        
+        // Обработка различных ошибок авторизации
+        if (error.message === 'CredentialsSignin') {
+          setError('Неверный email или пароль');
+        } else {
+          setError(error.message || 'Ошибка авторизации. Проверьте свои данные и попробуйте снова.');
+        }
       } else {
         console.error('Неизвестная ошибка', error);
-        router.replace('/500');
+        setError('Произошла неизвестная ошибка. Пожалуйста, попробуйте позже.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -70,6 +75,25 @@ const LoginForm: React.FC<LoginFormProps> = ({
       setIsAnyFormOpen(false);
     }
   };
+
+  const openResetForm = () => {
+    setIsResetFormOpen(true);
+  };
+
+  const closeResetForm = () => {
+    setIsResetFormOpen(false);
+  };
+
+  // Если форма сброса пароля открыта, скрываем форму логина
+  if (isResetFormOpen) {
+    return (
+      <PasswordResetForm 
+        isOpen={isResetFormOpen} 
+        closeForm={closeResetForm}
+        setIsAnyFormOpen={setIsAnyFormOpen}
+      />
+    );
+  }
 
   return (
     <Modal 
@@ -104,6 +128,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             <div className="text-sm">
               <button
                 type="button"
+                onClick={openResetForm}
                 className="font-semibold text-indigo-300 hover:text-gray-400"
               >
                 Забыли пароль?
@@ -132,6 +157,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <Button
             color="green"
             text="Войти в аккаунт"
+            disabled={isLoading}
           />
         </div>
       </form>

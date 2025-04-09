@@ -34,18 +34,28 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: '/auth/login',
+    error: '/auth/error',
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 дней
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
       return token;
     },
     async session({ session, token }) {
-      if (token?.id) session.user.id = token.id;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+      }
       return session;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 };

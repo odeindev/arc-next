@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '../../components/shared/button';
 import Image from 'next/image';
 import { UserCircle, Coins, Ghost, Clock, Calendar, LogIn, ShoppingCart, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 interface PlayerProfileProps {
   nickname: string;
@@ -22,7 +24,7 @@ interface PlayerProfileProps {
   totalPlayers: number;
 }
 
-interface Props extends PlayerProfileProps {
+interface Props extends Partial<PlayerProfileProps> {
   className?: string;
 }
 
@@ -57,22 +59,77 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => (
 
 export const UserProfile: React.FC<Props> = ({
   className,
-  nickname = 'lethimcook',
-  privilege = 'Нет привилегий',
-  privilegeExpiration = '---',
-  position = 'Администратор',
-  playTime = '0 ч',
-  coins = 0,
-  souls = 0,
-  balance = 0.0,
-  registrationDate = '---',
-  lastLogin = '---',
-  lastPurchase = '---',
-  onlinePlayers = 0,
-  totalPlayers = 0,
+  ...providedProps
 }) => {
+  // Проверка аутентификации
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      // Редирект неавторизованных пользователей
+      redirect('/auth/login');
+    },
+  });
+  
+  // Состояние для хранения данных пользователя
+  const [userData, setUserData] = useState<PlayerProfileProps>({
+    nickname: providedProps.nickname || 'Неизвестный игрок',
+    privilege: providedProps.privilege || 'Нет привилегий',
+    privilegeExpiration: providedProps.privilegeExpiration || '---',
+    position: providedProps.position || null,
+    playTime: providedProps.playTime || '0 ч',
+    coins: providedProps.coins || 0,
+    souls: providedProps.souls || 0,
+    balance: providedProps.balance || 0.0,
+    registrationDate: providedProps.registrationDate || '---',
+    lastLogin: providedProps.lastLogin || '---',
+    lastPurchase: providedProps.lastPurchase || '---',
+    onlinePlayers: providedProps.onlinePlayers || 0,
+    totalPlayers: providedProps.totalPlayers || 0,
+  });
+  
   const [avatar, setAvatar] = useState<string | null>(null);
   const [linkedNickname, setLinkedNickname] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Загрузка данных пользователя при монтировании компонента
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (session?.user?.id) {
+        try {
+          // Здесь можно добавить запрос к API для получения данных пользователя
+          // Пример:
+          // const response = await fetch(`/api/users/${session.user.id}`);
+          // const data = await response.json();
+          // setUserData({...data});
+          
+          // Временное решение: использовать имя из сессии или email как никнейм
+          setUserData(prevData => ({
+            ...prevData,
+            nickname: session.user.name || session.user.email?.split('@')[0] || prevData.nickname,
+            registrationDate: new Date().toLocaleDateString('ru-RU'),
+            lastLogin: new Date().toLocaleDateString('ru-RU'),
+          }));
+        } catch (error) {
+          console.error('Ошибка при загрузке данных пользователя:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    if (status === 'authenticated') {
+      fetchUserData();
+    }
+  }, [session, status]);
+
+  // Пока идет загрузка сессии или данных
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-slate-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -131,32 +188,34 @@ export const UserProfile: React.FC<Props> = ({
             </div>
             
             <div className="text-center md:text-left">
-              <h1 className="text-4xl font-bold text-gray-100 mb-2">{nickname || 'Неизвестный игрок'}</h1>
-              <p className={`text-xl ${getPrivilegeColor(privilege)}`}>
-                {privilege} {privilegeExpiration && privilegeExpiration !== '---' ? `(до ${privilegeExpiration})` : ''}
+              <h1 className="text-4xl font-bold text-gray-100 mb-2">{userData.nickname}</h1>
+              <p className={`text-xl ${getPrivilegeColor(userData.privilege)}`}>
+                {userData.privilege} {userData.privilegeExpiration && userData.privilegeExpiration !== '---' ? `(до ${userData.privilegeExpiration})` : ''}
               </p>
-              {position && <p className={`text-xl ${getPositionColor(position)}`}>{position}</p>}
+              {userData.position && <p className={`text-xl ${getPositionColor(userData.position)}`}>{userData.position}</p>}
+              <p className="text-blue-300 mt-2">ID: {session?.user?.id}</p>
+              <p className="text-gray-400">{session?.user?.email}</p>
             </div>
           </div>
 
           {/* Сетка с информацией */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InfoCard title="Игровая статистика">
-              <InfoRow icon={<Clock size={20} />} label="Время игры" value={playTime || '0 ч'} />
-              <InfoRow icon={<Coins size={20} />} label="Монеты" value={coins} />
-              <InfoRow icon={<Ghost size={20} />} label="Души" value={souls} />
-              <InfoRow icon={<Coins size={20} />} label="Баланс" value={`$${balance.toFixed(2)}`} />
+              <InfoRow icon={<Clock size={20} />} label="Время игры" value={userData.playTime || '0 ч'} />
+              <InfoRow icon={<Coins size={20} />} label="Монеты" value={userData.coins} />
+              <InfoRow icon={<Ghost size={20} />} label="Души" value={userData.souls} />
+              <InfoRow icon={<Coins size={20} />} label="Баланс" value={`$${userData.balance.toFixed(2)}`} />
             </InfoCard>
             
             <InfoCard title="Информация об аккаунте">
-              <InfoRow icon={<Calendar size={20} />} label="Дата регистрации" value={registrationDate || '---'} />
-              <InfoRow icon={<LogIn size={20} />} label="Последний вход" value={lastLogin || '---'} />
-              {lastPurchase && <InfoRow icon={<ShoppingCart size={20} />} label="Последняя покупка" value={lastPurchase} />}
+              <InfoRow icon={<Calendar size={20} />} label="Дата регистрации" value={userData.registrationDate || '---'} />
+              <InfoRow icon={<LogIn size={20} />} label="Последний вход" value={userData.lastLogin || '---'} />
+              {userData.lastPurchase && <InfoRow icon={<ShoppingCart size={20} />} label="Последняя покупка" value={userData.lastPurchase} />}
             </InfoCard>
 
             <InfoCard title="Статистика сервера">
-              <InfoRow icon={<Users size={20} />} label="Онлайн игроков" value={onlinePlayers} />
-              <InfoRow icon={<Users size={20} />} label="Всего игроков" value={totalPlayers} />
+              <InfoRow icon={<Users size={20} />} label="Онлайн игроков" value={userData.onlinePlayers} />
+              <InfoRow icon={<Users size={20} />} label="Всего игроков" value={userData.totalPlayers} />
             </InfoCard>
 
             <InfoCard title="Привязка аккаунта">

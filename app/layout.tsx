@@ -1,19 +1,19 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Mulish, Chakra_Petch } from "next/font/google";
 import "./globals.css";
-import { Header } from '../components/shared/header'
-import { Footer } from "@/components/shared/footer";
+import ClientLayout from "./client-layout";
 
 const mulish = Mulish({
   variable: "--font-mulish",
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "800", "900"]
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 const chakraPetch = Chakra_Petch({
   variable: "--font-chakra-petch",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"]
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,17 +23,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="ru" className={mulish.className}>
       <body className="antialiased bg-black">
-        <main className="min-h-screen">
-        <Header />
-        {children}  
-        <Footer />
-        </main>  
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

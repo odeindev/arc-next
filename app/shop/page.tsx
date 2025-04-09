@@ -3,8 +3,12 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { Button, ContentSection, ProductCard } from '../../components/shared';
+import { Button, ContentSection } from '../../components/shared';
 import { Product, products } from '../../public/data/products';
+import { ProductCard } from '../../components/shared/product-card';
+import { ShoppingCart } from 'lucide-react';
+import Link from 'next/link';
+import useCartStore from '../../components/store/useCartStore';
 
 interface Props {
   className?: string;
@@ -12,7 +16,11 @@ interface Props {
 
 const ShopPage: React.FC<Props> = ({ className }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
+  
+  // Получаем доступ к состоянию и методам корзины
+  const { items, addItem, removeItem, isInCart } = useCartStore();
+  
+  // Функции для открытия/закрытия модального окна
   const openModal = (product: Product) => {
     setSelectedProduct(product);
   };
@@ -20,12 +28,37 @@ const ShopPage: React.FC<Props> = ({ className }) => {
   const closeModal = () => {
     setSelectedProduct(null);
   };
+  
+  // Обработчик добавления товара в корзину из модального окна
+  const handleAddToCartFromModal = () => {
+    if (selectedProduct) {
+      addItem(selectedProduct);
+      closeModal();
+    }
+  };
 
   const subscriptionProducts = products.filter(p => p.type === 'subscription');
   const keyProducts = products.filter(p => p.type === 'key');
+  
+  // Количество товаров в корзине
+  const cartItemsCount = items.reduce((count, item) => count + item.quantity, 0);
 
   return (
     <div className={cn('relative min-h-screen flex flex-col', className)}>
+      {/* Иконка корзины с индикатором количества товаров */}
+      <div className="fixed top-6 right-6 z-10">
+        <Link href="/cart">
+          <div className="bg-slate-800 p-3 rounded-full shadow-lg hover:bg-slate-700 transition-colors relative">
+            <ShoppingCart className="text-white" size={24} />
+            {cartItemsCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                {cartItemsCount}
+              </span>
+            )}
+          </div>
+        </Link>
+      </div>
+    
       <ContentSection 
         title="Магазин сервера"
         iconSrc="/icons/shop-icon.gif"
@@ -43,7 +76,10 @@ const ShopPage: React.FC<Props> = ({ className }) => {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                onOpenModal={openModal} 
+                onOpenModal={openModal}
+                isInCart={isInCart(product.id)}
+                onAddToCart={() => addItem(product)}
+                onRemoveFromCart={() => removeItem(product.id)}
               />
             ))}
           </div>
@@ -60,13 +96,15 @@ const ShopPage: React.FC<Props> = ({ className }) => {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                onOpenModal={openModal} 
+                onOpenModal={openModal}
+                isInCart={isInCart(product.id)}
+                onAddToCart={() => addItem(product)}
+                onRemoveFromCart={() => removeItem(product.id)}
               />
             ))}
           </div>
         </div>
       </ContentSection>
-
 
       {/* Модальное окно с деталями */}
       {selectedProduct && (
@@ -115,12 +153,24 @@ const ShopPage: React.FC<Props> = ({ className }) => {
             </div>
             
             <div className="flex justify-around mt-6 items-center">
-              <Button 
-                color="green"
-                text="Купить" 
-                className="w-2/3" 
-                onClick={closeModal} 
-              />
+              {isInCart(selectedProduct.id) ? (
+                <Button 
+                  color="red"
+                  text="Убрать из корзины" 
+                  className="w-2/3" 
+                  onClick={() => {
+                    removeItem(selectedProduct.id);
+                    closeModal();
+                  }} 
+                />
+              ) : (
+                <Button 
+                  color="green"
+                  text="Добавить в корзину" 
+                  className="w-2/3" 
+                  onClick={handleAddToCartFromModal} 
+                />
+              )}
             </div>
           </div>
         </div>

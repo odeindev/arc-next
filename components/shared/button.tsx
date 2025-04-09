@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, ReactNode } from 'react';
 
 interface ButtonProps {
-  color: 'green' | 'blue' | 'orange' | 'yellow' | 'purple' | 'turquoise';
-  text: string;
+  color: 'green' | 'blue' | 'orange' | 'yellow' | 'purple' | 'turquoise' | 'red';
+  text?: string;
   href?: string;
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
+  children?: ReactNode;
+  // Добавляем поддержку иконки
+  icon?: ReactNode;
 }
 
 const colorClasses = {
@@ -47,6 +50,12 @@ const colorClasses = {
     border: 'border-[rgba(45,164,170,0.5)]',
     boxShadow: 'hover:shadow-[0_4px_12px_-1px_rgba(45,164,170,0.3)]',
     glowColor: 'rgba(45, 164, 170, 0.6)'
+  },
+  red: {
+    gradient: 'from-[rgba(239,68,68,0.3)] to-[rgba(220,38,38,0.3)] hover:from-[rgba(239,68,68,0.4)] hover:to-[rgba(220,38,38,0.4)]',
+    border: 'border-[rgba(239,68,68,0.5)]',
+    boxShadow: 'hover:shadow-[0_4px_12px_-1px_rgba(239,68,68,0.3)]',
+    glowColor: 'rgba(239, 68, 68, 0.6)'
   }
 } as const;
 
@@ -56,7 +65,9 @@ export const Button: React.FC<ButtonProps> = ({
   href,
   onClick,
   className = '',
-  disabled = false
+  disabled = false,
+  children,
+  icon
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -83,6 +94,35 @@ export const Button: React.FC<ButtonProps> = ({
   }, [isHovered, disabled]);
 
   const colorConfig = colorClasses[color];
+
+  const renderContent = () => {
+    if (children) return children;
+    
+    const textContent = text || '';
+    const contentWithIcon = (
+      <div className="flex items-center justify-center">
+        {icon && <span className="inline-flex items-center">{icon}</span>}
+        {textContent && <span className={icon ? "ml-2" : ""}>{textContent}</span>}
+      </div>
+    );
+    
+    if (href) {
+      return (
+        <a
+          href={disabled ? undefined : href}
+          className="relative z-10 text-shadow-sm pointer-events-none w-full inline-flex items-center justify-center"
+        >
+          {contentWithIcon}
+        </a>
+      );
+    }
+    
+    return (
+      <span className="relative z-10 text-shadow-sm w-full inline-flex items-center justify-center">
+        {contentWithIcon}
+      </span>
+    );
+  };
 
   return (
     <button
@@ -120,16 +160,7 @@ export const Button: React.FC<ButtonProps> = ({
           : undefined
       }
     >
-      {href ? (
-        <a
-          href={disabled ? undefined : href}
-          className="relative z-10 text-shadow-sm pointer-events-none"
-        >
-          {text}
-        </a>
-      ) : (
-        <span className="relative z-10 text-shadow-sm">{text}</span>
-      )}
+      {renderContent()}
 
       {!disabled && (
         <div

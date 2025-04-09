@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '../shared/index';
 import { VerificationForm } from './verification-form';
+import { useAuth } from '@/context/auth-context';
 
 interface RegistrationFormProps {
   isOpen: boolean;
@@ -17,12 +18,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   setIsAnyFormOpen 
 }) => {
   const router = useRouter();
+  const { setTempPassword } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [error, setError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showVerification, setShowVerification] = React.useState(false);
+  const [verificationCode, setVerificationCode] = React.useState<string | null>(null);
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,6 +58,16 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         throw new Error(errorData.error || 'Ошибка регистрации');
       }
 
+      const data = await response.json();
+      
+      // Если в режиме разработки, сохраняем код для автозаполнения
+      if (data.devCode) {
+        setVerificationCode(data.devCode);
+      }
+
+      // Сохраняем пароль во временное хранилище для автоматического входа после верификации
+      setTempPassword(password);
+      
       // Успешная регистрация, показываем форму верификации
       setShowVerification(true);
     } catch (error) {
@@ -66,7 +79,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         router.replace('/error');
       }
     } finally {
-      setIsSubmitting(true);
+      setIsSubmitting(false);
     }
   };
 
@@ -89,6 +102,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         isOpen={showVerification}
         closeForm={handleVerificationClose}
         email={email}
+        initialCode={verificationCode}
       />
     );
   }

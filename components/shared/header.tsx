@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Container, Button } from '@/components/shared/ui';
 import { LoginForm, RegistrationForm } from '../features/auth/ui';
-import { navLinks } from '@/public/data/links'; // Обновленный импорт
+import { navLinks } from '@/public/data/links';
 
 type FormType = 'login' | 'register' | null;
 

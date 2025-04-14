@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/components/shared/lib/utils';
 import { Button } from '@/components/shared/ui';
+import Link from 'next/link';
 
 interface ErrorSectionProps {
   code: string;
@@ -55,12 +56,13 @@ export const ErrorSection: React.FC<ErrorSectionProps> = ({
           <p className="text-lg text-gray-300">
             {description}
           </p>
-          <Button 
-            color={buttonColor}
-            href='/' 
-            text='Вернуться на главную' 
-            className='w-64 h-12 hover:shadow-lg transition-all transform hover:scale-105 shadow-lg' 
-          />
+          <Link href="/">
+            <Button 
+              color={buttonColor}
+              text='Вернуться на главную' 
+              className='w-64 h-12 hover:shadow-lg transition-all transform hover:scale-105 shadow-lg' 
+            />
+          </Link>
         </div>
       </div>
       <div className="relative">

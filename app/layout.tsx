@@ -27,9 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className={mulish.className}>
+    <html lang="ru" className={mulish.className} suppressHydrationWarning>
       <body className="antialiased bg-black">
         <ClientLayout>{children}</ClientLayout>
+        <strong className={chakraPetch.className}></strong>
       </body>
     </html>
   );

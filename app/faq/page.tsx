@@ -1,65 +1,140 @@
-// @app/rules/FAGPage.tsx
+// @app/rules/FAQPage.tsx
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { cn } from '@/components/shared/lib/utils';
 import { FAQCollection, FAQExtraNote } from '../../public/index';
 import { ContentSection } from '../../components/shared/ui/content-section';
-import { HelpCircle, ChevronDown, Search, ArrowUp } from 'lucide-react';
+import { HelpCircle, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SearchField } from '../../components/shared/ui/search-field';
+import { SectionHeader } from '../../components/shared/ui/section-header';
+import { ScrollTopButton } from '../../components/shared/ui/scroll-top-button';
+import { useScrollToTop } from '../../components/hooks/useScroll';
+import { highlightText } from '../utils/highlightText';
 
 interface Props {
   className?: string;
 }
 
+// Выделение FAQ элемента в отдельный компонент для лучшей организации
+// Пример обновленного компонента FAQItem
+const FAQItem = React.memo(({ 
+  faq, 
+  isOpen, 
+  onToggle, 
+  searchQuery 
+}: { 
+  faq: { question: string; answer: string; }; 
+  isOpen: boolean; 
+  onToggle: () => void; 
+  searchQuery: string;
+}) => {
+  return (
+    <motion.li
+      initial={false}
+      animate={isOpen ? {
+        boxShadow: '0 10px 25px -5px rgba(251, 146, 60, 0.1), 0 8px 10px -6px rgba(251, 146, 60, 0.05)'
+      } : {
+        boxShadow: 'none'
+      }}
+      className={cn(
+        "bg-slate-700/30 rounded-lg overflow-hidden transition-all duration-300",
+        isOpen ? "ring-1 ring-orange-400/30" : ""
+      )}
+    >
+      <button
+        className={cn(
+          "w-full text-left p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors",
+          isOpen ? "bg-slate-700/50 border-b border-slate-600/50" : ""
+        )}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <div className="flex items-center flex-1 pr-4">
+          <span className="text-white font-medium">{highlightText(faq.question, searchQuery)}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ChevronDown size={20} className="text-orange-400 flex-shrink-0" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 text-slate-300">
+              <div className="bg-slate-700/20 p-4 rounded-lg">
+                {highlightText(faq.answer, searchQuery)}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.li>
+  );
+});
+
+FAQItem.displayName = 'FAQItem';
+
 export const FAQPage: React.FC<Props> = ({ className }) => {
   const [expandedFaqs, setExpandedFaqs] = useState<{ [key: string]: boolean }>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { showScrollTop, scrollToTop } = useScrollToTop();
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  // Оптимизация: Используем useCallback для функций
+  const toggleFaq = useCallback((sectionIndex: number, faqIndex: number) => {
+    const key = `${sectionIndex}-${faqIndex}`;
+    setExpandedFaqs(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
-  const toggleFaq = (sectionIndex: number, faqIndex: number) => {
-    const key = `${sectionIndex}-${faqIndex}`;
-    setExpandedFaqs(prev => {
-      const newState = {
-        ...prev,
-        [key]: !prev[key]
-      };
-
-      return newState;
-    });
-  };
-
-  const isExpanded = (sectionIndex: number, faqIndex: number) => {
+  const isExpanded = useCallback((sectionIndex: number, faqIndex: number) => {
     const key = `${sectionIndex}-${faqIndex}`;
     return expandedFaqs[key] || false;
-  };
+  }, [expandedFaqs]);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const allFaqs = FAQCollection;
-
-  const filteredFAQs = searchQuery
-    ? FAQCollection.map(section => ({
+  // Мемоизируем отфильтрованные FAQ для предотвращения повторных вычислений
+  const filteredFAQs = useMemo(() => {
+    if (!searchQuery) return FAQCollection;
+    
+    return FAQCollection.map(section => ({
       ...section,
       faqs: section.faqs.filter(faq =>
         faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    })).filter(section => section.faqs.length > 0)
-    : FAQCollection;
+    })).filter(section => section.faqs.length > 0);
+  }, [searchQuery]);
+
+  // Статистика подсчета только один раз при инициализации
+  const faqStats = useMemo(() => ({
+    totalQuestions: FAQCollection.reduce((count, section) => count + section.faqs.length, 0),
+    totalCategories: FAQCollection.length
+  }), []);
+
+  // Создаем статистику для отображения в header
+  const statsContent = (
+    <div className="flex flex-wrap gap-3">
+      <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
+        <span className="font-medium text-orange-400 mr-2">{faqStats.totalQuestions}</span>
+        <span>вопросов</span>
+      </div>
+      <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
+        <span className="font-medium text-orange-400 mr-2">{faqStats.totalCategories}</span>
+        <span>категорий</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className={cn('relative min-h-screen flex flex-col', className)} ref={scrollRef}>
@@ -69,36 +144,19 @@ export const FAQPage: React.FC<Props> = ({ className }) => {
         iconAlt="FAQ"
         className="flex-grow"
       >
-        <div className="relative mb-6">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-            <Search className="text-slate-400" size={20} />
-          </div>
-          <input
-            type="text"
-            placeholder="Поиск по вопросам и ответам..."
-            className="w-full pl-12 pr-4 py-3 bg-slate-800/80 text-white rounded-lg border border-slate-700 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 focus:outline-none transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        <SearchField 
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Поиск по вопросам и ответам..."
+          className="mb-6"
+          autoFocus={false}
+        />
 
-        <div className="bg-gradient-to-r from-slate-700 to-slate-700/70 p-6 rounded-xl mb-6 border-l-4 border-orange-400 shadow-lg shadow-orange-500/5">
-          <h2 className="text-2xl text-white font-bold flex items-center">
-            <HelpCircle className="mr-3 text-orange-400" size={28} />
-            Ответы на популярные вопросы
-          </h2>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
-              <span className="font-medium text-orange-400 mr-2">{allFaqs.reduce((count, section) => count + section.faqs.length, 0)}</span>
-              <span>вопросов</span>
-            </div>
-            <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
-              <span className="font-medium text-orange-400 mr-2">{allFaqs.length}</span>
-              <span>категорий</span>
-            </div>
-          </div>
-        </div>
+        <SectionHeader
+          title="Ответы на популярные вопросы"
+          icon={HelpCircle}
+          extraContent={statsContent}
+        />
 
         <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
           {filteredFAQs.length > 0 ? (
@@ -110,75 +168,15 @@ export const FAQPage: React.FC<Props> = ({ className }) => {
                     <h2 className="text-xl text-orange-400 font-bold">{section.title}</h2>
                   </div>
                   <ul className="space-y-4">
-                    {section.faqs.map((faq, faqIndex) => {
-                      const isOpen = isExpanded(sectionIndex, faqIndex);
-                      const highlightMatch = (text: string) => {
-                        if (!searchQuery) return text;
-
-                        return text.split(new RegExp(`(${searchQuery})`, 'gi')).map((part, i) =>
-                          part.toLowerCase() === searchQuery.toLowerCase()
-                            ? <mark key={i} className="bg-orange-400/20 text-orange-100 px-1 rounded">{part}</mark>
-                            : part
-                        );
-                      };
-
-                      return (
-                        <motion.li
-                          key={faqIndex}
-                          initial={false}
-                          animate={isOpen ? {
-                            boxShadow: '0 10px 25px -5px rgba(251, 146, 60, 0.1), 0 8px 10px -6px rgba(251, 146, 60, 0.05)'
-                          } : {
-                            boxShadow: 'none'
-                          }}
-                          className={cn(
-                            "bg-slate-700/30 rounded-lg overflow-hidden transition-all duration-300",
-                            isOpen ? "ring-1 ring-orange-400/30" : ""
-                          )}
-                        >
-                          <button
-                            className={cn(
-                              "w-full text-left p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors",
-                              isOpen ? "bg-slate-700/50 border-b border-slate-600/50" : ""
-                            )}
-                            onClick={() => toggleFaq(sectionIndex, faqIndex)}
-                            aria-expanded={isOpen}
-                          >
-                            <div className="flex items-center flex-1 pr-4">
-                              {/* Убрали нумерацию вопросов */}
-                              <span className="text-white font-medium">{highlightMatch(faq.question)}</span>
-                            </div>
-                            <motion.div
-                              animate={{ rotate: isOpen ? 180 : 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <ChevronDown
-                                size={20}
-                                className="text-orange-400 flex-shrink-0"
-                              />
-                            </motion.div>
-                          </button>
-
-                          <AnimatePresence>
-                            {isOpen && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="p-4 text-slate-300">
-                                  <div className="bg-slate-700/20 p-4 rounded-lg">
-                                    {highlightMatch(faq.answer)}
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.li>
-                      );
-                    })}
+                    {section.faqs.map((faq, faqIndex) => (
+                      <FAQItem
+                        key={faqIndex}
+                        faq={faq}
+                        isOpen={isExpanded(sectionIndex, faqIndex)}
+                        onToggle={() => toggleFaq(sectionIndex, faqIndex)}
+                        searchQuery={searchQuery}
+                      />
+                    ))}
                   </ul>
                 </li>
               ))}
@@ -202,21 +200,7 @@ export const FAQPage: React.FC<Props> = ({ className }) => {
         </div>
       </ContentSection>
 
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 bg-orange-400 text-slate-900 p-3 rounded-full shadow-lg shadow-orange-400/20 hover:bg-orange-500 transition-colors"
-            onClick={scrollToTop}
-            aria-label="Прокрутить вверх"
-          >
-            <ArrowUp size={20} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   );
 };

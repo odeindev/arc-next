@@ -42,25 +42,24 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user && user.id && user.email) {
-        // Добавляем кастомные поля в токен
+      if (user) { // Используем параметр user
         token.id = user.id;
         token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        // Только если значения действительно есть, добавляем их
-        if (typeof token.id === 'string') {
-          session.user.id = token.id;
-        }
-
-        if (typeof token.email === 'string') {
-          session.user.email = token.email;
-        }
+      if (session.user && token) { // Используем параметр token
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Если URL уже начинается с базового URL, оставляем его как есть
+      if (url.startsWith(baseUrl)) return url;
+      // По умолчанию перенаправляем на страницу аккаунта
+      return `${baseUrl}/account`;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

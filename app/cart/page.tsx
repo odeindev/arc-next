@@ -36,8 +36,7 @@ const CartPage: React.FC<Props> = ({ className }) => {
     <div className={cn('relative min-h-screen flex flex-col', className)}>
       <ContentSection 
         title="Корзина"
-        iconSrc="/icons/cart-icon.gif"
-        iconAlt="Cart Icon"
+        // Убрана ссылка на иконку
         className="flex-grow"
       >
         {isCartEmpty ? (

@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       <div className={cn('flex space-x-2', isMobile && 'flex-col space-x-0 space-y-2')}>
         <Button 
           color='green' 
-          text='Вход' 
+          text='Войти' 
           className={buttonClassName} 
           onClick={() => openForm('login')} 
         />

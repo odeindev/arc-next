@@ -79,38 +79,36 @@ const useCartStore = create<CartState>((set, get) => ({
     } catch (error) {
       console.error('Error syncing cart with server:', error);
     }
-    
+  
     const { items } = get();
-    
-    // Проверяем, является ли продукт привилегией
+  
     if (product.type === 'subscription') {
-      // Если это привилегия, удаляем все другие привилегии и добавляем новую
       const nonSubscriptions = items.filter(item => item.product.type !== 'subscription');
+  
+      // Если уже есть такая привилегия — не сбрасываем duration
+      const existing = items.find(item => item.product.id === product.id);
+      const duration = existing?.duration || '30-d';
+  
       set({ 
-        items: [...nonSubscriptions, { product, quantity: 1, duration: '30-d' }] 
+        items: [...nonSubscriptions, { product, quantity: 1, duration }] 
       });
     } else if (product.type === 'key') {
-      // Проверяем, есть ли уже такой ключ в корзине
       const existingKeyIndex = items.findIndex(item => item.product.id === product.id);
-      
+  
       if (existingKeyIndex >= 0) {
-        // Если такой ключ уже есть, обновляем его количество
         const updatedItems = [...items];
         updatedItems[existingKeyIndex].quantity += quantity;
         set({ items: updatedItems });
       } else {
-        // Проверяем, сколько разных ключей уже в корзине
         const keyCount = items.filter(item => item.product.type === 'key').length;
         if (keyCount < 4) {
-          // Если меньше 4, добавляем новый ключ
           set({ items: [...items, { product, quantity }] });
         } else {
-          // Можно добавить уведомление о достижении лимита ключей
           console.warn('Достигнут лимит разных ключей в корзине (максимум 4)');
         }
       }
     }
-  },
+  },  
   
   // Удаление товара из корзины
   removeItem: (productId: number) => {

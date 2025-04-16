@@ -1,5 +1,5 @@
 // @app/api/auth/verify-email/route.ts
-import { prisma } from '@/components/shared/lib/prisma/prisma-client';
+import { prisma } from '@/prisma/prisma-client';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -16,6 +16,9 @@ export async function POST(req: Request) {
     // Найти пользователя по email
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        emailVerifications: true
+      }
     });
 
     if (!user) {
@@ -25,22 +28,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // Проверить код подтверждения
-    if (user.verificationCode !== code) {
+    // Найти активный код верификации
+    const verificationRecord = user.emailVerifications.find(v => 
+      v.code === code && v.expiresAt > new Date()
+    );
+
+    if (!verificationRecord) {
       return NextResponse.json(
-        { error: 'Неверный код подтверждения' },
+        { error: 'Неверный или истекший код подтверждения' },
         { status: 400 }
       );
     }
 
-    // Подтвердить email пользователя
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verificationCode: null, // Удаляем код после успешной проверки
-      },
-    });
+    // Подтвердить email пользователя и удалить все коды верификации
+    await prisma.$transaction([
+      // Обновить статус пользователя
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+        },
+      }),
+      // Удалить все коды верификации этого пользователя
+      prisma.emailVerification.deleteMany({
+        where: { userId: user.id },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

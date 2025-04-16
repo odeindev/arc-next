@@ -1,8 +1,6 @@
 // app/api/auth/validate-reset-token/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/prisma/prisma-client';
 
 export async function GET(request: Request) {
   try {
@@ -16,17 +14,20 @@ export async function GET(request: Request) {
       );
     }
 
-    // Ищем пользователя с указанным токеном
-    const user = await prisma.user.findFirst({
+    // Ищем запись сброса пароля с указанным токеном, который еще не истек
+    const passwordReset = await prisma.passwordReset.findFirst({
       where: {
-        resetToken: token,
-        resetTokenExpiry: {
+        token: token,
+        expiresAt: {
           gt: new Date()  // Токен не должен быть просрочен
         }
+      },
+      include: {
+        user: true
       }
     });
 
-    if (!user) {
+    if (!passwordReset) {
       return NextResponse.json(
         { error: 'Недействительный или истекший токен' },
         { status: 400 }

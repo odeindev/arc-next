@@ -1,6 +1,6 @@
 //@components/constants/auth-options.ts
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { prisma } from '@/components/shared/lib/prisma/prisma-client';
+import { prisma } from '@/prisma/prisma-client';
 import bcrypt from 'bcryptjs';
 import type { NextAuthOptions } from 'next-auth';
 

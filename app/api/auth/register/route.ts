@@ -1,5 +1,5 @@
 // @app/api/auth/register/route.ts
-import { prisma } from '@/components/shared/lib/prisma/prisma-client';
+import { prisma } from '@/prisma/prisma-client';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import { generateVerificationCode, sendVerificationEmail } from '@/components/shared/lib/email';
@@ -22,19 +22,35 @@ export async function POST(req: Request) {
 
     // Хешируем пароль
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     // Генерируем код подтверждения (6 цифр)
     const verificationCode = generateVerificationCode();
+    
+    // Создаем дату истечения кода (например, 24 часа)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-    // Создаем пользователя
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        username: '',
-        verificationCode,
-        emailVerified: false,
-      },
+    // Создаем пользователя и код верификации в транзакции
+    await prisma.$transaction(async (tx) => {
+      // Создаем пользователя
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          username: '',
+        },
+      });
+
+      // Создаем запись верификации email
+      await tx.emailVerification.create({
+        data: {
+          userId: user.id,
+          code: verificationCode,
+          expiresAt: expiresAt,
+        },
+      });
+
+      return user;
     });
 
     const isDevelopment = process.env.NODE_ENV === 'development';

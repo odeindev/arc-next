@@ -1,6 +1,7 @@
-// components/shared/cart-item.tsx
+// components/entities/cart/ui/cart-item.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import Image from 'next/image';
 import { Trash2, ChevronDown } from 'lucide-react';
 import { CartItem as CartItemType } from '@/components/store/useCartStore';
@@ -24,6 +25,124 @@ const durationOptions = [
   { value: '1-y', label: '1 год' }
 ];
 
+// Максимальное количество для покупки товара
+const MAX_QUANTITY = 999;
+
+// Компонент для отрисовки выпадающего меню через портал
+const DropdownPortal = ({ 
+  isOpen, 
+  buttonRef, 
+  children,
+  onClose 
+}: { 
+  isOpen: boolean, 
+  buttonRef: React.RefObject<HTMLButtonElement | null>, 
+  children: React.ReactNode,
+  onClose: () => void 
+}) => {
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Обновление позиции при прокрутке и при изменении размеров окна
+  useEffect(() => {
+    if (!isOpen || !buttonRef.current) return;
+
+    // Функция для обновления позиции выпадающего списка
+    const updatePosition = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    // Инициализация позиции
+    updatePosition();
+
+    // Добавляем слушатели событий
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    // Очистка слушателей при размонтировании
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, buttonRef]);
+
+  // Обработка клика вне дропдауна и клавиши Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current && 
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, onClose, buttonRef]);
+
+  if (!isOpen) return null;
+  
+  // Вычисляем корректное положение дропдауна относительно viewport
+  const adjustPosition = () => {
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+    
+    let adjustedLeft = dropdownPosition.left;
+    
+    // Проверяем, не выходит ли дропдаун за правый край экрана
+    if (dropdownPosition.left + dropdownPosition.width > viewport.width - 10) {
+      adjustedLeft = viewport.width - dropdownPosition.width - 10;
+    }
+    
+    // Важная часть: используем только top из getBoundingClientRect() для фиксированного позиционирования
+    // без добавления window.scrollY
+    return {
+      top: `${dropdownPosition.top}px`,
+      left: `${adjustedLeft}px`,
+      width: `${dropdownPosition.width}px`,
+    };
+  };
+  
+  return ReactDOM.createPortal(
+    <div 
+      ref={dropdownRef}
+      className="fixed bg-slate-800 rounded-lg shadow-lg overflow-hidden border border-slate-700 z-50"
+      style={adjustPosition()}
+      role="listbox"
+      aria-orientation="vertical"
+    >
+      {children}
+    </div>,
+    document.body
+  );
+};
+
 const CartItem: React.FC<CartItemProps> = ({
   item,
   onQuantityChange,
@@ -34,12 +153,12 @@ const CartItem: React.FC<CartItemProps> = ({
   dropdownOpen,
   onDropdownToggle
 }) => {
-  const [deleteConfirm, setDeleteConfirm] = useState<boolean>(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
   // Обработчик прямого ввода количества
   const handleQuantityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0) {
+    if (!isNaN(value) && value > 0 && value <= MAX_QUANTITY) {
       onQuantityChange(item.product.id, value);
     }
   };
@@ -50,6 +169,9 @@ const CartItem: React.FC<CartItemProps> = ({
     if (isNaN(value) || value < 1) {
       // Если введено некорректное значение, устанавливаем 1
       onQuantityChange(item.product.id, 1);
+    } else if (value > MAX_QUANTITY) {
+      // Если введено значение выше максимального, устанавливаем максимум
+      onQuantityChange(item.product.id, MAX_QUANTITY);
     }
   };
 
@@ -83,12 +205,12 @@ const CartItem: React.FC<CartItemProps> = ({
             {item.product.type === 'subscription' ? (
               <>
                 <span className="inline-block w-2 h-2 bg-orange-400 rounded-full mr-2"></span>
-                Привилегия
+                <span>Привилегия</span>
               </>
             ) : (
               <>
                 <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                Ключ
+                <span>Ключ</span>
               </>
             )}
           </p>
@@ -106,11 +228,15 @@ const CartItem: React.FC<CartItemProps> = ({
             <div className="md:hidden text-slate-400 text-sm mb-1">Срок:</div>
             <div className="relative">
               <button 
+                ref={buttonRef}
                 className="bg-slate-700 text-white w-full h-10 rounded-lg flex items-center justify-between px-3 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDropdownToggle(dropdownOpen === item.product.id ? null : item.product.id);
                 }}
+                aria-haspopup="listbox"
+                aria-expanded={dropdownOpen === item.product.id}
+                aria-label="Выбрать период подписки"
               >
                 <span>
                   {durationOptions.find(opt => opt.value === item.duration)?.label || '30 дней'}
@@ -118,26 +244,36 @@ const CartItem: React.FC<CartItemProps> = ({
                 <ChevronDown size={16} className={`transition-transform duration-300 ${dropdownOpen === item.product.id ? 'rotate-180' : ''}`} />
               </button>
               
-              {/* Выпадающее меню с выбором периода */}
-              {dropdownOpen === item.product.id && (
-                <div 
-                  className="absolute z-10 mt-2 w-full bg-slate-800 rounded-lg shadow-lg overflow-hidden border border-slate-700"
-                >
-                  {durationOptions.map((option) => (
-                    <div 
-                      key={option.value}
-                      className={`px-4 py-3 cursor-pointer hover:bg-slate-700 text-white transition-colors ${item.duration === option.value ? 'bg-orange-500/20 font-medium' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
+              {/* Выпадающее меню через портал */}
+              <DropdownPortal 
+                isOpen={dropdownOpen === item.product.id} 
+                buttonRef={buttonRef}
+                onClose={() => onDropdownToggle(null)}
+              >
+                {durationOptions.map((option) => (
+                  <div 
+                    key={option.value}
+                    className={`px-4 py-3 cursor-pointer hover:bg-slate-700 text-white transition-colors ${item.duration === option.value ? 'bg-orange-500/20 font-medium' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDurationChange(item.product.id, option.value as '30-d' | '90-d' | '1-y');
+                      onDropdownToggle(null);
+                    }}
+                    role="option"
+                    aria-selected={item.duration === option.value}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
                         onDurationChange(item.product.id, option.value as '30-d' | '90-d' | '1-y');
                         onDropdownToggle(null);
-                      }}
-                    >
-                      {option.label}
-                    </div>
-                  ))}
-                </div>
-              )}
+                      }
+                    }}
+                  >
+                    {option.label}
+                  </div>
+                ))}
+              </DropdownPortal>
             </div>
           </>
         ) : (
@@ -149,6 +285,8 @@ const CartItem: React.FC<CartItemProps> = ({
                 className={`bg-slate-700 text-white w-10 h-10 rounded-l-lg flex items-center justify-center ${
                   item.quantity > 1 ? 'hover:bg-slate-600 active:bg-slate-500' : 'opacity-50 cursor-not-allowed'
                 } transition-colors`}
+                disabled={item.quantity <= 1}
+                aria-label="Уменьшить количество"
               >
                 -
               </button>
@@ -159,10 +297,20 @@ const CartItem: React.FC<CartItemProps> = ({
                 onBlur={handleQuantityBlur}
                 className="bg-slate-800 text-white w-12 h-10 text-center focus:outline-none focus:ring-2 focus:ring-orange-400/50 border-x border-slate-600"
                 aria-label="Количество товара"
+                max={MAX_QUANTITY}
+                min={1}
+                role="spinbutton"
+                aria-valuemin={1}
+                aria-valuemax={MAX_QUANTITY}
+                aria-valuenow={item.quantity}
               />
               <button
-                onClick={() => onQuantityChange(item.product.id, item.quantity + 1)}
-                className="bg-slate-700 text-white w-10 h-10 rounded-r-lg flex items-center justify-center hover:bg-slate-600 active:bg-slate-500 transition-colors"
+                onClick={() => item.quantity < MAX_QUANTITY && onQuantityChange(item.product.id, item.quantity + 1)}
+                className={`bg-slate-700 text-white w-10 h-10 rounded-r-lg flex items-center justify-center ${
+                  item.quantity < MAX_QUANTITY ? 'hover:bg-slate-600 active:bg-slate-500' : 'opacity-50 cursor-not-allowed'
+                } transition-colors`}
+                disabled={item.quantity >= MAX_QUANTITY}
+                aria-label="Увеличить количество"
               >
                 +
               </button>
@@ -176,39 +324,13 @@ const CartItem: React.FC<CartItemProps> = ({
           <div className="md:hidden text-slate-400 text-sm mb-1">Сумма:</div>
           <div className="text-white font-bold">{subtotal} ₽</div>
         </div>
-        <div className="relative">
-          {deleteConfirm ? (
-            <div 
-              className="absolute right-0 bottom-full mb-2 bg-slate-700 rounded-lg shadow-lg p-2 w-32 text-center"
-            >
-              <p className="text-xs text-slate-300 mb-2">Удалить товар?</p>
-              <div className="flex justify-between space-x-2">
-                <button 
-                  onClick={() => {
-                    onRemove(item.product.id);
-                    setDeleteConfirm(false);
-                  }}
-                  className="text-xs bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded transition-colors"
-                >
-                  Да
-                </button>
-                <button 
-                  onClick={() => setDeleteConfirm(false)}
-                  className="text-xs bg-slate-600 hover:bg-slate-500 text-white py-1 px-2 rounded transition-colors"
-                >
-                  Нет
-                </button>
-              </div>
-            </div>
-          ) : null}
-          <button 
-            onClick={() => setDeleteConfirm(true)}
-            className="text-slate-400 hover:text-red-400 p-2 rounded-full hover:bg-slate-700 transition-colors"
-            aria-label="Удалить товар"
-          >
-            <Trash2 size={20} />
-          </button>
-        </div>
+        <button 
+          onClick={() => onRemove(item.product.id)}
+          className="text-slate-400 hover:text-red-400 p-2 rounded-full hover:bg-slate-700 transition-colors"
+          aria-label="Удалить товар"
+        >
+          <Trash2 size={20} />
+        </button>
       </div>
     </div>
   );

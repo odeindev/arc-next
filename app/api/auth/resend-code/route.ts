@@ -1,5 +1,5 @@
 // @app/api/auth/resend-code/route.ts
-import { prisma } from '@/components/shared/lib/prisma/prisma-client';
+import { prisma } from '@/prisma/prisma-client';
 import { NextResponse } from 'next/server';
 import { generateVerificationCode, sendVerificationEmail } from '@/components/shared/lib/email';
 
@@ -28,12 +28,26 @@ export async function POST(req: Request) {
 
     // Генерируем новый код
     const verificationCode = generateVerificationCode();
+    
+    // Создаем дату истечения кода (например, 24 часа)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-    // Обновляем код верификации
-    await prisma.user.update({
-      where: { email },
-      data: { verificationCode },
-    });
+    // Удаляем старые коды и создаем новый
+    await prisma.$transaction([
+      // Удалить старые коды
+      prisma.emailVerification.deleteMany({
+        where: { userId: user.id },
+      }),
+      // Создать новый код
+      prisma.emailVerification.create({
+        data: {
+          userId: user.id,
+          code: verificationCode,
+          expiresAt: expiresAt,
+        },
+      }),
+    ]);
 
     const isDevelopment = process.env.NODE_ENV === 'development';
     

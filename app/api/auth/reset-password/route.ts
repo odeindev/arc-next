@@ -1,10 +1,9 @@
 // app/api/auth/reset-password/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/prisma/prisma-client';
 import { Resend } from 'resend';
 import crypto from 'crypto';
 
-const prisma = new PrismaClient();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
@@ -33,20 +32,27 @@ export async function POST(request: Request) {
     }
 
     // Генерируем токен для сброса пароля
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // Токен действителен 1 час
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // Токен действителен 1 час
 
-    // Сохраняем токен в базе данных
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetToken,
-        resetTokenExpiry
-      }
-    });
+    // Удаляем старые токены и создаем новый токен сброса пароля
+    await prisma.$transaction([
+      // Удаляем существующие токены сброса пароля для этого пользователя
+      prisma.passwordReset.deleteMany({
+        where: { userId: user.id }
+      }),
+      // Создаем новую запись сброса пароля
+      prisma.passwordReset.create({
+        data: {
+          userId: user.id,
+          token: token,
+          expiresAt: expiresAt
+        }
+      })
+    ]);
 
     // Формируем URL для сброса пароля
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${token}`;
 
     // Отправляем email с инструкциями
     await resend.emails.send({

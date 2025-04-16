@@ -1,98 +1,68 @@
 // @components/pages/rules-page.tsx
 'use client'
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/components/shared/lib/utils';
-import { RulesCollection } from '../../public/index';
-import { ContentSection } from '../../components/shared/ui/content-section';
 import { AlertTriangle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import { ContentSection } from '../../components/shared/ui/content-section';
 import { SearchField } from '../../components/shared/ui/search-field';
 import { SectionHeader } from '../../components/shared/ui/section-header';
 import { ScrollTopButton } from '../../components/shared/ui/scroll-top-button';
 import { useScrollToTop, useActiveSection } from '../../components/hooks/useScroll';
-import { highlightText } from '@/app/utils/highlightText';
+import { useDebounce } from '../../components/hooks/useDebounce';
+
+// Динамический импорт компонента RuleSection для разделения кода
+const RuleSection = dynamic(() => import('../../components/shared/ui/rule-section'), {
+  ssr: false,
+  loading: () => <div className="h-32 bg-slate-700/20 rounded-lg animate-pulse" />
+});
 
 interface RulesPageProps {
   className?: string;
 }
 
-// Выделение компонента правила для лучшей организации
-const RuleItem = React.memo(({ 
-  rule, 
-  index,
-  searchQuery 
-}: { 
-  rule: string;
-  index: number;
-  searchQuery: string;
-}) => {  
-  return (
-    <motion.li 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-slate-700/30 rounded-lg p-4 hover:bg-slate-700/50 transition-colors text-slate-300 border-l-2 border-slate-600 group"
-    >
-      <div className="flex">
-        <span className="text-slate-300 group-hover:text-white transition-colors">
-          {highlightText(rule, searchQuery)}
-        </span>
-      </div>
-    </motion.li>
-  );
-});
+// Типы для данных правил
+interface RuleItem {
+  title?: string;
+  rule?: string;
+}
 
-RuleItem.displayName = 'RuleItem';
-
-// Выделение секции правил
-const RuleSection = React.memo(({ 
-  section, 
-  isHighlighted,
-  searchQuery,
-  setRef
-}: { 
-  section: { title: string; id: string; rules: string[] };
-  isHighlighted: boolean;
-  searchQuery: string;
-  setRef: (el: HTMLDivElement | null) => void;
-}) => {
-  return (
-    <div 
-      className={cn(
-        "mb-8 last:mb-0 border-b border-slate-700/50 pb-6 last:border-0 last:pb-0 p-6 transition-all",
-        isHighlighted ? "section-highlight" : ""
-      )}
-      ref={setRef}
-      id={section.id}
-    >
-      <div className="flex items-center mb-4">
-        <div className="w-3 h-3 bg-orange-400 rounded-full mr-3"></div>
-        <h2 className="text-xl text-orange-400 font-bold">{section.title}</h2>
-      </div>
-      <ul className="space-y-3 py-6">
-        {section.rules.map((rule, ruleIndex) => (
-          <RuleItem
-            key={ruleIndex}
-            rule={rule}
-            index={ruleIndex}
-            searchQuery={searchQuery}
-          />
-        ))}
-      </ul>
-    </div>
-  );
-});
-
-RuleSection.displayName = 'RuleSection';
+interface RuleSection {
+  title: string;
+  id: string;
+  rules: string[];
+}
 
 export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const { showScrollTop, scrollToTop } = useScrollToTop();
   
-  // Мемоизируем секции для предотвращения ненужных перерасчетов
+  // Состояние для данных (загружаются динамически)
+  const [rulesCollection, setRulesCollection] = useState<RuleItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Динамическая загрузка данных
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const rulesData = await import('@/public/data/content/rules');
+        setRulesCollection(rulesData.RulesCollection);
+      } catch (error) {
+        console.error('Failed to load rules data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    loadData();
+  }, []);
+  
+  
+  // Преобразование коллекции правил в структурированные секции
   const sections = useMemo(() => {
-    return RulesCollection.reduce((sections, item) => {
+    return rulesCollection.reduce((sections, item) => {
       if (item.title) {
         sections.push({
           title: item.title,
@@ -103,9 +73,10 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
         sections[sections.length - 1].rules.push(item.rule);
       }            
       return sections;
-    }, [] as {title: string, id: string, rules: string[]}[]);
-  }, []);
+    }, [] as RuleSection[]);
+  }, [rulesCollection]);
   
+  // Используем хук для отслеживания активной секции
   const { 
     activeSection, 
     highlightedSection, 
@@ -113,20 +84,21 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
     scrollToSection 
   } = useActiveSection(sections);
   
-  // Мемоизируем отфильтрованные секции
+  // Фильтруем секции на основе поискового запроса
   const filteredSections = useMemo(() => {
-    if (!searchQuery) return sections;
+    if (!debouncedSearch) return sections;
     
+    const searchLower = debouncedSearch.toLowerCase();
     return sections.map(section => ({
       ...section,
       rules: section.rules.filter(rule => 
-        rule.toLowerCase().includes(searchQuery.toLowerCase())
+        rule.toLowerCase().includes(searchLower)
       )
     })).filter(section => section.rules.length > 0);
-  }, [sections, searchQuery]);
+  }, [sections, debouncedSearch]);
   
-  // Создаем элементы быстрой навигации для отображения в header
-  const navigationButtons = (
+  // Кнопки навигации для секций
+  const navigationButtons = useMemo(() => (
     <div className="flex flex-wrap gap-2">
       {sections.map((section, index) => (
         <button
@@ -143,7 +115,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
         </button>
       ))}
     </div>
-  );
+  ), [sections, activeSection, scrollToSection]);
   
   return (
     <div className={cn('relative min-h-screen flex flex-col', className)}>
@@ -156,6 +128,13 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
         .section-highlight {
           animation: section-highlight-animation 1.8s ease-in-out;
         }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
       
       <ContentSection 
@@ -164,7 +143,6 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
         iconAlt="Rules"
         className="flex-grow"
       >
-        {/* Search bar with new component */}
         <SearchField 
           value={searchQuery}
           onChange={setSearchQuery}
@@ -173,22 +151,36 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
           autoFocus={false}
         />
         
-        {/* Header with navigation */}
         <SectionHeader
           title="Общие правила и положения"
           icon={AlertTriangle}
           extraContent={navigationButtons}
         />
         
-        {/* Rules content */}
         <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
-          {filteredSections.length > 0 ? (
+          {isLoading ? (
+            // Состояние загрузки
+            <div className="p-6 space-y-8">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-6 bg-slate-700/50 rounded w-1/4 mb-4"></div>
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, j) => (
+                      <div key={j} className="h-12 bg-slate-700/30 rounded-lg"></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredSections.length > 0 ? (
             filteredSections.map((section, sectionIndex) => (
               <RuleSection 
                 key={sectionIndex}
-                section={section}
+                title={section.title}
+                id={section.id}
+                rules={section.rules}
                 isHighlighted={highlightedSection === section.id}
-                searchQuery={searchQuery}
+                searchQuery={debouncedSearch}
                 setRef={(el) => setSectionRef(el, section.id)}
               />
             ))
@@ -201,7 +193,6 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
         </div>
       </ContentSection>
       
-      {/* Scroll to top button */}
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   );

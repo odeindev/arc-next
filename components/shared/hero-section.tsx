@@ -1,65 +1,47 @@
+// /src/widgets/hero/ui/hero-section.tsx
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { cn } from '@/components/shared/lib/utils';
-import { Check, Copy, Server } from 'lucide-react';
-
-interface HeroProps {
-  className?: string;
-  serverVersion?: string;
-  serverIp?: string;
-}
+import { HeroProps, CarouselState } from '@/components/widgets/hero/model/types';
+import { ImageCarousel } from '@/components/widgets/hero/ui/image-carousel';
+import { ParticlesCanvas } from '@/components/widgets/hero/ui/particles-canvas';
+import { ServerInfoCard } from '@/components/widgets/hero/ui/server-info-card';
+import { calculateParallaxStyles } from '@/components/widgets/hero/lib/parallax';
+import { CAROUSEL_IMAGE_COUNT, CAROUSEL_TRANSITION_DURATION } from '@/components/widgets/hero/model/constants';
+import { preloadImage } from '@/components/widgets/hero/lib/image-preload';
 
 export const HeroSection = ({
   className,
   serverVersion = '1.18.2',
   serverIp = 'arcadia-craft.net',
 }: HeroProps) => {
+  // Состояния
   const [copied, setCopied] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [particles, setParticles] = useState<Array<{ x: number; y: number; size: number; speed: number; opacity: number }>>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(1);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [preloadedImages, setPreloadedImages] = useState<Set<number>>(new Set([1]));
+  
+  // Состояние карусели, теперь в родительском компоненте
+  const [carouselState, setCarouselState] = useState<CarouselState>({
+    currentImageIndex: 1,
+    isTransitioning: false,
+    preloadedImages: new Set([1]),
+  });
 
-  // Функция для предзагрузки следующего изображения
-  const preloadNextImage = (nextIndex: number) => {
-    if (preloadedImages.has(nextIndex)) return;
-    
-    // Используем HTMLImageElement вместо Image, чтобы избежать конфликта с компонентом Next.js
-    const img = new window.Image();
-    img.src = `/images/gallery-${String(nextIndex).padStart(2, '0')}.avif`;
-    img.onload = () => {
-      setPreloadedImages(prev => new Set([...prev, nextIndex]));
-    };
-  };
+  // Мемоизированное вычисление стилей для параллакса
+  const parallaxStyles = useMemo(() => calculateParallaxStyles(scrollY), [scrollY]);
 
-  // Создаем эффект параллакса при скролле
+  // Эффект для отслеживания скролла и установки видимости
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    // Инициализация частиц
-    const generateParticles = () => {
-      const newParticles = [];
-      for (let i = 0; i < 50; i++) {
-        newParticles.push({
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: Math.random() * 1.5 + 0.5,
-          speed: Math.random() * 0.5 + 0.1,
-          opacity: Math.random() * 0.5 + 0.3
-        });
+      if (typeof window !== 'undefined') {
+        setScrollY(window.scrollY);
       }
-      setParticles(newParticles);
     };
 
-    generateParticles();
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     const visibilityTimeout = setTimeout(() => setIsVisible(true), 100);
     
@@ -69,44 +51,8 @@ export const HeroSection = ({
     };
   }, []);
 
-  // Эффект для автоматической смены изображений каждые 5 секунд
-  useEffect(() => {
-    const imageInterval = setInterval(() => {
-      // Предзагружаем следующее изображение
-      const nextIndex = (currentImageIndex % 12) + 1;
-      preloadNextImage(nextIndex);
-      
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentImageIndex(nextIndex);
-        
-        // Предзагружаем изображение, которое будет после следующего
-        preloadNextImage((nextIndex % 12) + 1);
-        
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300);
-      }, 300);
-    }, 5000);
-
-    return () => clearInterval(imageInterval);
-  }, [currentImageIndex]);
-
-  // Предзагрузка ближайших нескольких изображений при первом рендере
-  useEffect(() => {
-    // Убедимся, что выполняется только на клиенте
-    if (typeof window !== 'undefined') {
-      const preloadInitialBatch = () => {
-        // Предзагружаем следующие несколько изображений (2, 3)
-        preloadNextImage(2);
-        preloadNextImage(3);
-      };
-      
-      preloadInitialBatch();
-    }
-  }, []);
-
-  const copyToClipboard = async () => {
+  // Функция для копирования IP адреса в буфер обмена с обработкой ошибок
+  const copyToClipboard = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(serverIp);
       setCopied(true);
@@ -116,28 +62,62 @@ export const HeroSection = ({
       console.error('Failed to copy: ', err);
       return false;
     }
-  };
+  }, [serverIp]);
 
-  // Вычисляем коэффициент параллакса в зависимости от высоты секции
-  const parallaxFactor = 0.3;
-  const parallaxOffset = scrollY * parallaxFactor;
+  // Обновление состояния предзагруженных изображений
+  const updatePreloadedImages = useCallback((index: number) => {
+    setCarouselState(prev => ({
+      ...prev,
+      preloadedImages: new Set([...prev.preloadedImages, index])
+    }));
+  }, []);
 
-  // Получаем текущий путь к изображению
-  const currentImagePath = `/images/gallery-${String(currentImageIndex).padStart(2, '0')}.avif`;
+  // Функция для предзагрузки следующего изображения
+  const preloadNextImage = useCallback((nextIndex: number) => {
+    if (carouselState.preloadedImages.has(nextIndex)) return;
+    preloadImage(nextIndex, () => updatePreloadedImages(nextIndex));
+  }, [carouselState.preloadedImages, updatePreloadedImages]);
 
-  // Функция для переключения слайда по клику
-  const handleSlideClick = (index: number) => {
-    if (index === currentImageIndex) return;
+  // Функция для переключения слайда
+  const handleSlideChange = useCallback((nextIndex: number) => {
+    if (nextIndex === carouselState.currentImageIndex || carouselState.isTransitioning) return;
     
-    preloadNextImage(index);
-    setIsTransitioning(true);
+    preloadNextImage(nextIndex);
+    setCarouselState(prev => ({ ...prev, isTransitioning: true }));
+    
     setTimeout(() => {
-      setCurrentImageIndex(index);
+      setCarouselState(prev => ({ ...prev, currentImageIndex: nextIndex }));
+      
+      // Предзагружаем изображение, которое будет после следующего
+      const afterNextIndex = (nextIndex % CAROUSEL_IMAGE_COUNT) + 1;
+      preloadNextImage(afterNextIndex);
+      
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-    }, 300);
-  };
+        setCarouselState(prev => ({ ...prev, isTransitioning: false }));
+      }, CAROUSEL_TRANSITION_DURATION);
+    }, CAROUSEL_TRANSITION_DURATION);
+  }, [carouselState.currentImageIndex, carouselState.isTransitioning, preloadNextImage]);
+
+  // Предзагрузка начальной партии при первом рендере
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Предзагружаем следующие несколько изображений (2, 3)
+      preloadNextImage(2);
+      preloadNextImage(3);
+    }
+  }, [preloadNextImage]);
+
+  // Автоматическая смена изображений
+  useEffect(() => {
+    if (carouselState.isTransitioning) return;
+    
+    const imageInterval = setInterval(() => {
+      const nextIndex = (carouselState.currentImageIndex % CAROUSEL_IMAGE_COUNT) + 1;
+      handleSlideChange(nextIndex);
+    }, 5000); // Интервал между сменой слайдов
+
+    return () => clearInterval(imageInterval);
+  }, [carouselState.currentImageIndex, carouselState.isTransitioning, handleSlideChange]);
 
   return (
     <section 
@@ -146,65 +126,21 @@ export const HeroSection = ({
         'relative w-full h-[1080px] min-h-screen overflow-hidden',
         className
       )}
+      aria-label="Главная секция Arcadia Craft"
     >
       {/* Фоновое изображение с параллакс-эффектом */}
       <div 
         className="relative w-full h-full overflow-hidden"
         style={{ perspective: '1000px' }}
       >
-        {/* Контейнер с параллакс-эффектом */}
-        <div 
-          className="absolute inset-0 w-full h-full"
-          style={{ 
-            transform: `translateY(${parallaxOffset}px) scale(${1 + scrollY * 0.0003})`,
-            transition: 'transform 0.1s ease-out'
-          }}
-        >
-          {/* Используем div-обертку для позиционирования и размеров */}
-          <div className="absolute w-[120%] h-[120%] top-[-10%] left-[-10%]">
-            <div
-              className={cn(
-                "relative w-full h-full transition-opacity duration-300",
-                isTransitioning ? "opacity-0" : "opacity-100"
-              )}
-            >
-              <Image
-                src={currentImagePath}
-                alt="Arcadia Craft Server"
-                fill
-                priority={currentImageIndex === 1}
-                loading={currentImageIndex === 1 ? "eager" : "lazy"}
-                sizes="120vw"
-                className="object-cover object-center"
-                style={{ 
-                  filter: 'brightness(0.7)'
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Компонент карусели */}
+        <ImageCarousel 
+          parallaxStyles={parallaxStyles} 
+          carouselState={carouselState} 
+        />
         
-        {/* Overlay с градиентом */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70"></div>
-        
-        {/* Анимированные частицы */}
-        <div className="absolute inset-0 pointer-events-none">
-          {particles.map((particle, index) => (
-            <div
-              key={index}
-              className="absolute rounded-full bg-cyan-300"
-              style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                opacity: particle.opacity,
-                animation: `float ${5 / particle.speed}s infinite ease-in-out`,
-                animationDelay: `${index * 0.1}s`
-              }}
-            />
-          ))}
-        </div>
+        {/* Компонент с частицами */}
+        <ParticlesCanvas />
 
         <div className="absolute inset-0 flex flex-col justify-center items-center px-4 md:px-8">
           <div 
@@ -232,7 +168,7 @@ export const HeroSection = ({
             {/* Подзаголовок с тайпрайтер-эффектом */}
             <p 
               className={cn(
-                "font-normal text-base md:text-lg lg:text-xl max-w-4xl mx-auto mb-8 text-slate-100 font-mulish transition-all duration-1000 delay-300",
+                "font-normal text-base md:text-lg lg:text-xl max-w-4xl mx-auto mb-6 text-slate-100 font-mulish transition-all duration-1000 delay-300",
                 isVisible ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-10"
               )}
             >
@@ -240,103 +176,49 @@ export const HeroSection = ({
               Погрузитесь в атмосферу древнегреческой эстетики, где каждый игрок найдет свое неповторимое приключение.
             </p>
 
-            {/* Индикаторы слайдов */}
-            <div className="flex justify-center gap-2 mb-6">
-              {Array.from({ length: 12 }, (_, i) => (
-                <div 
-                  key={i} 
+            {/* Индикаторы карусели - теперь размещены под текстом */}
+            <div 
+              className={cn(
+                "flex justify-center gap-2 mb-8 transition-opacity duration-1000 delay-400",
+                isVisible ? "opacity-100" : "opacity-0"
+              )}
+              role="navigation" 
+              aria-label="Навигация по галерее изображений"
+            >
+              {Array.from({ length: CAROUSEL_IMAGE_COUNT }, (_, i) => (
+                <button
+                  key={i}
+                  type="button" 
                   className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300 cursor-pointer",
-                    currentImageIndex === i + 1 
-                      ? "bg-cyan-400 w-4" 
+                    "w-2 h-2 rounded-full transition-all duration-300",
+                    carouselState.currentImageIndex === i + 1 
+                      ? "bg-cyan-400 w-6" 
                       : "bg-gray-400/50 hover:bg-gray-300/70"
                   )}
-                  onClick={() => handleSlideClick(i + 1)}
-                ></div>
+                  onClick={() => handleSlideChange(i + 1)}
+                  aria-label={`Перейти к изображению ${i + 1}`}
+                  aria-current={carouselState.currentImageIndex === i + 1 ? "true" : "false"}
+                ></button>
               ))}
             </div>
 
-            {/* Карточка с информацией о сервере - стеклянный дизайн */}
-            <div
+            {/* Компонент с информацией о сервере */}
+            <div 
               className={cn(
-                'bg-gradient-to-br from-slate-900/80 to-slate-700/50 backdrop-blur-lg rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(74,144,226,0.3)] max-w-lg mx-auto mt-4 transition-all duration-1000 delay-500 border border-slate-600/30',
+                "transition-all duration-1000 delay-500",
                 isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
               )}
             >
-              <div className="relative p-8">
-                {/* Блики на стекле */}
-                <div className="absolute -top-20 -left-20 w-40 h-40 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none"></div>
-                <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
-                
-                {/* Информация о версии */}
-                <div className="flex items-center justify-center gap-4 mb-6 relative">
-                  <Server className="text-cyan-400" size={24} />
-                  <span className="font-semibold text-white/90 text-lg">
-                    Версия сервера:{' '}
-                    <span className="bg-gradient-to-r from-teal-400 to-blue-400 text-transparent bg-clip-text font-bold">
-                      {serverVersion}
-                    </span>
-                  </span>
-                </div>
-
-                {/* Копирование IP */}
-                <div className="bg-slate-800/70 backdrop-blur-sm px-6 py-4 rounded-xl mb-2 relative overflow-hidden group">
-                  {/* Анимированный фон при наведении */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  <div className="text-center text-slate-300 mb-2 font-medium">
-                    Нажми, чтобы скопировать адрес:
-                  </div>
-                  <div
-                    className="flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-700/50 p-3 rounded-lg transition-all duration-300 group relative"
-                    onClick={copyToClipboard}
-                    role="button"
-                    aria-label="Скопировать IP адрес"
-                  >
-                    <span className="font-semibold text-white text-lg">IP:</span>
-                    <span className="font-bold bg-gradient-to-r from-cyan-300 to-blue-400 text-transparent bg-clip-text mr-2 text-lg tracking-wide">
-                      {serverIp}
-                    </span>
-                    <div className="relative">
-                      {copied ? (
-                        <Check size={20} className="text-green-400" />
-                      ) : (
-                        <Copy size={20} className="text-slate-400 group-hover:text-cyan-400 transition-colors duration-300" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ServerInfoCard 
+                serverVersion={serverVersion} 
+                serverIp={serverIp} 
+                onCopy={copyToClipboard} 
+                copied={copied} 
+              />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Уведомление о копировании */}
-      {copied && (
-        <div className="fixed bottom-6 right-6 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium px-6 py-3 rounded-lg shadow-xl animate-fadeIn z-50 backdrop-blur-sm flex items-center gap-2">
-          <Check size={18} />
-          IP-адрес скопирован!
-        </div>
-      )}
-
-      {/* Добавляем стили для анимации частиц */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0) translateX(0);
-          }
-          25% {
-            transform: translateY(-10px) translateX(5px);
-          }
-          50% {
-            transform: translateY(0) translateX(10px);
-          }
-          75% {
-            transform: translateY(10px) translateX(5px);
-          }
-        }
-      `}</style>
     </section>
   );
 };

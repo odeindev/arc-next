@@ -1,4 +1,4 @@
-// verification-form.tsx (вероятный путь)
+// verification-form.tsx
 'use client';
 
 import React from 'react';

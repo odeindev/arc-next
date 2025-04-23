@@ -1,7 +1,10 @@
+import { HeroSection } from "@/components/shared/hero-section";
 import React from "react";
 
 export default function Home() {
   return (
-    <main></main>
+    <main>
+      <HeroSection />
+    </main>
   );
 }

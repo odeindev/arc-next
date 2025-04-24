@@ -2,125 +2,127 @@
 
 'use client';
 
-import { useEffect, useState, useMemo, memo } from 'react';
-import { Particle } from '../model/types';
+import { useEffect, memo, useRef } from 'react';
 import { 
-  PARTICLE_COUNT, 
-  PARTICLE_OPACITY_MAX, 
-  PARTICLE_OPACITY_MIN, 
-  PARTICLE_SIZE_MAX, 
-  PARTICLE_SIZE_MIN, 
-  PARTICLE_SPEED_MAX, 
+  PARTICLE_COUNT,
+  PARTICLE_OPACITY_MAX,
+  PARTICLE_OPACITY_MIN,
+  PARTICLE_SIZE_MAX,
+  PARTICLE_SIZE_MIN,
+  PARTICLE_SPEED_MAX,
   PARTICLE_SPEED_MIN 
 } from '../model/constants';
 
-// Вспомогательная функция для генерации уникального ID
-const generateId = () => Math.random().toString(36).substring(2, 10);
-
-// Вспомогательная функция для генерации частиц
-const generateParticles = (count: number): Particle[] => {
-  const particles = [];
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * (PARTICLE_SIZE_MAX - PARTICLE_SIZE_MIN) + PARTICLE_SIZE_MIN,
-      speed: Math.random() * (PARTICLE_SPEED_MAX - PARTICLE_SPEED_MIN) + PARTICLE_SPEED_MIN,
-      opacity: Math.random() * (PARTICLE_OPACITY_MAX - PARTICLE_OPACITY_MIN) + PARTICLE_OPACITY_MIN,
-      id: generateId()
-    });
-  }
-  return particles;
-};
-
+// Значительно упрощаем компонент с частицами
 export const ParticlesCanvas = memo(function ParticlesCanvas() {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Инициализация частиц только на клиенте
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const particlesRef = useRef<Array<{
+    x: number;
+    y: number;
+    size: number;
+    speed: number;
+    opacity: number;
+    vx: number;
+    vy: number;
+  }>>([]);
+  
+  // Меняем подход - используем Canvas вместо множества DOM-элементов
   useEffect(() => {
-    setIsClient(true);
-    setParticles(generateParticles(PARTICLE_COUNT));
+    if (typeof window === 'undefined') return;
     
-    // Добавляем регенерацию частиц через интервал для оживления эффекта
-    const regenerationInterval = setInterval(() => {
-      setParticles(prevParticles => {
-        // Обновляем только 10% частиц каждый раз
-        const particlesToUpdate = Math.ceil(prevParticles.length * 0.1);
-        const newParticles = [...prevParticles];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    // Устанавливаем размер канваса
+    const updateCanvasSize = () => {
+      if (canvas && canvas.parentElement) {
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+      }
+    };
+    
+    // Инициализируем частицы
+    const initParticles = () => {
+      particlesRef.current = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particlesRef.current.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * (PARTICLE_SIZE_MAX - PARTICLE_SIZE_MIN) + PARTICLE_SIZE_MIN,
+          speed: Math.random() * (PARTICLE_SPEED_MAX - PARTICLE_SPEED_MIN) + PARTICLE_SPEED_MIN,
+          opacity: Math.random() * (PARTICLE_OPACITY_MAX - PARTICLE_OPACITY_MIN) + PARTICLE_OPACITY_MIN,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3
+        });
+      }
+    };
+    
+    // Анимируем частицы
+    const animateParticles = () => {
+      if (!canvas || !context) return;
+      
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particlesRef.current.forEach(particle => {
+        // Обновляем позицию
+        particle.x += particle.vx * particle.speed;
+        particle.y += particle.vy * particle.speed;
         
-        for (let i = 0; i < particlesToUpdate; i++) {
-          const randomIndex = Math.floor(Math.random() * newParticles.length);
-          newParticles[randomIndex] = {
-            ...generateParticles(1)[0],
-            id: newParticles[randomIndex].id // Сохраняем существующий ID
-          };
-        }
+        // Отражаем от краев
+        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
         
-        return newParticles;
+        // Рисуем частицу
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        context.fillStyle = `rgba(103, 232, 249, ${particle.opacity})`;
+        context.fill();
+        
+        // Добавляем свечение
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.size + 1, 0, Math.PI * 2);
+        context.fillStyle = `rgba(103, 232, 249, ${particle.opacity * 0.5})`;
+        context.fill();
       });
-    }, 5000); // Каждые 5 секунд
+      
+      // Запускаем следующий кадр анимации
+      animationFrameRef.current = requestAnimationFrame(animateParticles);
+    };
     
-    return () => clearInterval(regenerationInterval);
-  }, []);
-
-  // Мемоизируем стили для анимации для предотвращения пересоздания
-  const animationStyles = useMemo(() => `
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0) translateX(0);
-      }
-      25% {
-        transform: translateY(-10px) translateX(5px);
-      }
-      50% {
-        transform: translateY(0) translateX(10px);
-      }
-      75% {
-        transform: translateY(10px) translateX(5px);
-      }
+    // Важно: сначала удаляем предыдущие обработчики, если они были
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-  `, []);
-
-  // Если не на клиенте, возвращаем пустой компонент
-  if (!isClient) return null;
-
+    
+    window.addEventListener('resize', updateCanvasSize);
+    updateCanvasSize();
+    initParticles();
+    
+    // Запускаем анимацию
+    animationFrameRef.current = requestAnimationFrame(animateParticles);
+    
+    // Очистка при размонтировании
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      // Очищаем массив частиц
+      particlesRef.current = [];
+    };
+  }, []); // Важно: пустой массив зависимостей
+  
   return (
-    <div 
-      className="absolute inset-0 pointer-events-none z-10" 
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none z-10"
       aria-hidden="true"
-    >
-      {particles.map((particle) => {
-        // Вычисляем значения для анимации
-        const animationName = "float";
-        const animationDuration = `${5 / particle.speed}s`;
-        const animationTimingFunction = "ease-in-out";
-        const animationIterationCount = "infinite";
-        const animationDelay = `${parseInt(particle.id, 36) % 10 * 0.1}s`;
-        
-        return (
-          <div
-            key={particle.id}
-            className="absolute rounded-full bg-cyan-300"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              opacity: particle.opacity,
-              animationName,
-              animationDuration,
-              animationTimingFunction,
-              animationIterationCount,
-              animationDelay,
-              boxShadow: '0 0 6px rgba(103, 232, 249, 0.5)'
-            }}
-          />
-        );
-      })}
-
-      {/* Стили для анимации частиц */}
-      <style jsx global>{animationStyles}</style>
-    </div>
+    />
   );
 });

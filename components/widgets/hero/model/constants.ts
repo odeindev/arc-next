@@ -1,6 +1,6 @@
 // /src/widgets/hero/model/constants.ts
 
-// Константы для компонентов Hero секции
+import { GALLERY_IMAGES_AVIF } from '@/public/images/index';
 
 // Настройки частиц
 export const PARTICLE_COUNT = 50;
@@ -14,12 +14,22 @@ export const PARTICLE_OPACITY_MAX = 0.8;
 // Настройки карусели
 export const CAROUSEL_TRANSITION_DURATION = 300; // мс
 export const CAROUSEL_INTERVAL = 5000; // мс
-export const CAROUSEL_IMAGE_COUNT = 12;
+export const CAROUSEL_IMAGE_COUNT = GALLERY_IMAGES_AVIF.length;
 
 // Настройки параллакса
 export const PARALLAX_FACTOR = 0.3;
 export const PARALLAX_SCALE_FACTOR = 0.0003;
 
-// Пути к изображениям
-export const getImagePath = (index: number): string => 
-  `/images/gallery-${String(index).padStart(2, '0')}.avif`;
+// Получение пути к изображению по индексу (с учетом новой структуры данных)
+export const getImagePath = (index: number): string => {
+  // Находим изображение по id (индексы в массиве начинаются с 0, а id с 1)
+  const image = GALLERY_IMAGES_AVIF.find(img => img.id === index);
+  // Возвращаем путь к изображению, или первое изображение как запасной вариант
+  return image ? image.path : GALLERY_IMAGES_AVIF[0].path;
+};
+
+// Получение alt текста для изображения
+export const getImageAlt = (index: number): string => {
+  const image = GALLERY_IMAGES_AVIF.find(img => img.id === index);
+  return image ? image.alt : 'Изображение галереи';
+};

@@ -6,7 +6,7 @@ import { memo } from 'react';
 import Image from 'next/image';
 import { cn } from '@/components/shared/lib/utils';
 import { CarouselState } from '../model/types';
-import { getImagePath } from '../model/constants';
+import { getImagePath, getImageAlt } from '../model/constants';
 
 interface ImageCarouselProps {
   parallaxStyles: React.CSSProperties;
@@ -17,8 +17,9 @@ export const ImageCarousel = memo(function ImageCarousel({
   parallaxStyles, 
   carouselState 
 }: ImageCarouselProps) {
-  // Получаем текущий путь к изображению
+  // Получаем текущий путь к изображению и альтернативный текст
   const currentImagePath = getImagePath(carouselState.currentImageIndex);
+  const currentImageAlt = getImageAlt(carouselState.currentImageIndex);
 
   return (
     <>
@@ -38,7 +39,7 @@ export const ImageCarousel = memo(function ImageCarousel({
           >
             <Image
               src={currentImagePath}
-              alt={`Arcadia Craft Server - Изображение ${carouselState.currentImageIndex}`}
+              alt={currentImageAlt}
               fill
               priority={carouselState.currentImageIndex === 1}
               loading={carouselState.currentImageIndex === 1 ? "eager" : "lazy"}

@@ -1,4 +1,4 @@
-// /src/widgets/hero/ui/hero-section.tsx
+//components/shared/hero-section.tsx
 
 'use client';
 
@@ -10,22 +10,23 @@ import { ParticlesCanvas } from '@/components/widgets/hero/ui/particles-canvas';
 import { ServerInfoCard } from '@/components/widgets/hero/ui/server-info-card';
 import { calculateParallaxStyles } from '@/components/widgets/hero/lib/parallax';
 import { CAROUSEL_IMAGE_COUNT, CAROUSEL_TRANSITION_DURATION } from '@/components/widgets/hero/model/constants';
-import { preloadImage } from '@/components/widgets/hero/lib/image-preload';
+import { preloadImage, clearPreloadCache } from '@/components/widgets/hero/lib/image-preload';
+import { GALLERY_IMAGES_AVIF } from '@/public/images/index';
 
 export const HeroSection = ({
   className,
   serverVersion = '1.18.2',
   serverIp = 'arcadia-craft.net',
 }: HeroProps) => {
-  // Состояния
   const [copied, setCopied] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const imageIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Состояние карусели, теперь в родительском компоненте
   const [carouselState, setCarouselState] = useState<CarouselState>({
-    currentImageIndex: 1,
+    currentImageIndex: 1, // Начинаем с первого изображения (id=1)
     isTransitioning: false,
     preloadedImages: new Set([1]),
   });
@@ -78,24 +79,28 @@ export const HeroSection = ({
     preloadImage(nextIndex, () => updatePreloadedImages(nextIndex));
   }, [carouselState.preloadedImages, updatePreloadedImages]);
 
-  // Функция для переключения слайда
+  // Функция для переключения слайда с учетом общего количества изображений из GALLERY_IMAGES_AVIF
   const handleSlideChange = useCallback((nextIndex: number) => {
     if (nextIndex === carouselState.currentImageIndex || carouselState.isTransitioning) return;
     
     preloadNextImage(nextIndex);
     setCarouselState(prev => ({ ...prev, isTransitioning: true }));
     
-    setTimeout(() => {
+    // Используем ref для хранения таймаутов, которые потом очистим
+    const transitionTimeout = setTimeout(() => {
       setCarouselState(prev => ({ ...prev, currentImageIndex: nextIndex }));
       
       // Предзагружаем изображение, которое будет после следующего
-      const afterNextIndex = (nextIndex % CAROUSEL_IMAGE_COUNT) + 1;
+      const afterNextIndex = nextIndex % CAROUSEL_IMAGE_COUNT + 1;
       preloadNextImage(afterNextIndex);
       
       setTimeout(() => {
         setCarouselState(prev => ({ ...prev, isTransitioning: false }));
       }, CAROUSEL_TRANSITION_DURATION);
     }, CAROUSEL_TRANSITION_DURATION);
+    
+    // Сохраняем таймаут для будущей очистки
+    return transitionTimeout;
   }, [carouselState.currentImageIndex, carouselState.isTransitioning, preloadNextImage]);
 
   // Предзагрузка начальной партии при первом рендере
@@ -105,19 +110,56 @@ export const HeroSection = ({
       preloadNextImage(2);
       preloadNextImage(3);
     }
+    
+    // При размонтировании очищаем кэш изображений
+    return () => {
+      clearPreloadCache();
+    };
   }, [preloadNextImage]);
 
-  // Автоматическая смена изображений
+  // Автоматическая смена изображений - с правильной очисткой интервала
   useEffect(() => {
+    // Сначала очищаем предыдущий интервал, если есть
+    if (imageIntervalRef.current) {
+      clearInterval(imageIntervalRef.current);
+      imageIntervalRef.current = null;
+    }
+    
     if (carouselState.isTransitioning) return;
     
-    const imageInterval = setInterval(() => {
+    // Устанавливаем новый интервал и сохраняем ссылку
+    imageIntervalRef.current = setInterval(() => {
       const nextIndex = (carouselState.currentImageIndex % CAROUSEL_IMAGE_COUNT) + 1;
-      handleSlideChange(nextIndex);
+      const timeout = handleSlideChange(nextIndex);
+      
+      // Для дальнейшей очистки таймаута, если компонент размонтируется
+      return () => {
+        if (timeout) clearTimeout(timeout);
+      };
     }, 5000); // Интервал между сменой слайдов
 
-    return () => clearInterval(imageInterval);
+    // Очищаем интервал при размонтировании
+    return () => {
+      if (imageIntervalRef.current) {
+        clearInterval(imageIntervalRef.current);
+        imageIntervalRef.current = null;
+      }
+    };
   }, [carouselState.currentImageIndex, carouselState.isTransitioning, handleSlideChange]);
+
+  // При размонтировании компонента очищаем все ресурсы
+  useEffect(() => {
+    return () => {
+      // Очищаем все таймауты и интервалы
+      if (imageIntervalRef.current) {
+        clearInterval(imageIntervalRef.current);
+        imageIntervalRef.current = null;
+      }
+      
+      // Очищаем кэш изображений
+      clearPreloadCache();
+    };
+  }, []);
 
   return (
     <section 
@@ -176,31 +218,31 @@ export const HeroSection = ({
               Погрузитесь в атмосферу древнегреческой эстетики, где каждый игрок найдет свое неповторимое приключение.
             </p>
 
-            {/* Индикаторы карусели - теперь размещены под текстом */}
+            {/* Индикаторы карусели */}
             <div 
-              className={cn(
-                "flex justify-center gap-2 mb-8 transition-opacity duration-1000 delay-400",
-                isVisible ? "opacity-100" : "opacity-0"
-              )}
-              role="navigation" 
-              aria-label="Навигация по галерее изображений"
-            >
-              {Array.from({ length: CAROUSEL_IMAGE_COUNT }, (_, i) => (
-                <button
-                  key={i}
-                  type="button" 
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300",
-                    carouselState.currentImageIndex === i + 1 
-                      ? "bg-cyan-400 w-6" 
-                      : "bg-gray-400/50 hover:bg-gray-300/70"
-                  )}
-                  onClick={() => handleSlideChange(i + 1)}
-                  aria-label={`Перейти к изображению ${i + 1}`}
-                  aria-current={carouselState.currentImageIndex === i + 1 ? "true" : "false"}
-                ></button>
-              ))}
-            </div>
+            className={cn(
+              "flex justify-center gap-2 mb-8 transition-opacity duration-1000 delay-400",
+              isVisible ? "opacity-100" : "opacity-0"
+            )}
+            role="navigation" 
+            aria-label="Навигация по галерее изображений"
+          >
+            {GALLERY_IMAGES_AVIF.map((image) => (
+              <button
+                key={image.id}
+                type="button" 
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-300",
+                  carouselState.currentImageIndex === image.id 
+                    ? "bg-cyan-400 w-6" 
+                    : "bg-gray-400/50 hover:bg-gray-300/70"
+                )}
+                onClick={() => handleSlideChange(image.id)}
+                aria-label={`Перейти к изображению ${image.id}`}
+                aria-current={carouselState.currentImageIndex === image.id ? "true" : "false"}
+              ></button>
+            ))}
+          </div>
 
             {/* Компонент с информацией о сервере */}
             <div 

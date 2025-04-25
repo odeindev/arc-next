@@ -29,7 +29,7 @@ export const RuleSection = React.memo(({
   return (
     <div 
       className={cn(
-        "mb-8 last:mb-0 border-b border-slate-700/50 pb-6 last:border-0 last:pb-0 p-6 transition-all",
+        "mb-8 last:mb-0 border-b border-slate-500 pb-6 last:border-0 last:pb-0 p-6 transition-all",
         isHighlighted ? "section-highlight" : ""
       )}
       ref={setRef}

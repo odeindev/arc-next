@@ -130,7 +130,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
           extraContent={statsContent}
         />
 
-        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-slate-700 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
           {isLoading ? (
             // Состояние загрузки
             <div className="p-6 space-y-4">

@@ -154,7 +154,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
           extraContent={navigationButtons}
         />
         
-        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
+        <div className="bg-slate-700/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl">
           {isLoading ? (
             // Состояние загрузки
             <div className="p-6 space-y-8">

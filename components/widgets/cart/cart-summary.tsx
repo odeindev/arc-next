@@ -33,7 +33,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ total, onClearCart }) => {
       <div className="w-full md:w-auto">
         <div className="flex justify-between md:justify-end items-center mb-4">
           <div className="text-slate-300 mr-4 font-medium">Итого:</div>
-          <div className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+          <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
             {total} ₽
           </div>
         </div>

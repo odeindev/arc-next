@@ -184,7 +184,7 @@ const CartItem: React.FC<CartItemProps> = ({
       <div className="col-span-1 md:col-span-6 flex items-center">
         {item.product.icon ? (
           <div className="relative">
-            <div className="absolute inset-0 bg-orange-400/20 rounded-lg blur-md"></div>
+            <div className="absolute inset-0 bg-yellow-400/20 rounded-lg blur-md"></div>
             <Image
               src="/api/placeholder/56/56"
               alt={item.product.name}
@@ -194,7 +194,7 @@ const CartItem: React.FC<CartItemProps> = ({
             />
           </div>
         ) : (
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg mr-4 flex items-center justify-center relative">
+          <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg mr-4 flex items-center justify-center relative">
             <div className="absolute inset-0 bg-white/10 rounded-lg"></div>
             <span className="text-white font-bold text-xl">{item.product.name.charAt(0)}</span>
           </div>
@@ -204,7 +204,7 @@ const CartItem: React.FC<CartItemProps> = ({
           <p className="text-sm text-slate-400 flex items-center">
             {item.product.type === 'subscription' ? (
               <>
-                <span className="inline-block w-2 h-2 bg-orange-400 rounded-full mr-2"></span>
+                <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
                 <span>Привилегия</span>
               </>
             ) : (
@@ -219,7 +219,7 @@ const CartItem: React.FC<CartItemProps> = ({
       
       <div className="col-span-1 md:col-span-2 text-left md:text-center">
         <div className="md:hidden text-slate-400 text-sm mb-1">Цена:</div>
-        <div className="text-orange-400 font-bold">{item.product.price}</div>
+        <div className="text-yellow-400 font-bold">{item.product.price}</div>
       </div>
       
       <div className="col-span-1 md:col-span-2 text-left md:text-center">
@@ -229,7 +229,7 @@ const CartItem: React.FC<CartItemProps> = ({
             <div className="relative">
               <button 
                 ref={buttonRef}
-                className="bg-slate-700 text-white w-full h-10 rounded-lg flex items-center justify-between px-3 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all"
+                className="bg-slate-700 text-white w-full h-10 rounded-lg flex items-center justify-between px-3 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDropdownToggle(dropdownOpen === item.product.id ? null : item.product.id);
@@ -253,7 +253,7 @@ const CartItem: React.FC<CartItemProps> = ({
                 {durationOptions.map((option) => (
                   <div 
                     key={option.value}
-                    className={`px-4 py-3 cursor-pointer hover:bg-slate-700 text-white transition-colors ${item.duration === option.value ? 'bg-orange-500/20 font-medium' : ''}`}
+                    className={`px-4 py-3 cursor-pointer hover:bg-slate-700 text-white transition-colors ${item.duration === option.value ? 'bg-yellow-500/20 font-medium' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDurationChange(item.product.id, option.value as '30-d' | '90-d' | '1-y');
@@ -295,7 +295,7 @@ const CartItem: React.FC<CartItemProps> = ({
                 value={item.quantity}
                 onChange={handleQuantityInputChange}
                 onBlur={handleQuantityBlur}
-                className="bg-slate-800 text-white w-12 h-10 text-center focus:outline-none focus:ring-2 focus:ring-orange-400/50 border-x border-slate-600"
+                className="bg-slate-800 text-white w-12 h-10 text-center focus:outline-none focus:ring-2 focus:ring-yellow-400/50 border-x border-slate-600"
                 aria-label="Количество товара"
                 max={MAX_QUANTITY}
                 min={1}

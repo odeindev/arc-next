@@ -20,11 +20,11 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
 }) => {
   return (
     <div className={cn(
-      "bg-gradient-to-r from-slate-700 to-slate-700/70 p-6 rounded-xl mb-6 border-l-4 border-orange-400 shadow-lg shadow-orange-500/5",
+      "bg-gradient-to-b from-slate-800 to-slate-700/70 p-6 rounded-xl mb-6 border-l-4 border-yellow-400 shadow-lg shadow-yellow-500/5",
       className
     )}>
       <h2 className="text-2xl text-white font-bold flex items-center mb-4">
-        <Icon className="mr-3 text-orange-400" size={28} />
+        <Icon className="mr-3 text-yellow-400" size={28} />
         {title}
       </h2>
       

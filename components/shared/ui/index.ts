@@ -1,4 +1,9 @@
 export { Button } from './button';
 export { Container } from './container';
 export { ContentSection } from './content-section';
+export { FAQItem } from './faq-item';
+export { RuleItem } from './rule-item';
+export { RuleSection } from './rule-section';
+export { ScrollTopButton } from './scroll-top-button';
 export { SearchField } from './search-field';
+export { SectionHeader } from './section-header';

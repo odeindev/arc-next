@@ -36,8 +36,8 @@ export const RuleSection = React.memo(({
       id={id}
     >
       <div className="flex items-center mb-4">
-        <div className="w-3 h-3 bg-orange-400 rounded-full mr-3"></div>
-        <h2 className="text-xl text-orange-400 font-bold">{title}</h2>
+        <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+        <h2 className="text-xl text-yellow-400 font-bold">{title}</h2>
       </div>
       <ul className="space-y-3 py-6">
         {rules.map((rule, ruleIndex) => (

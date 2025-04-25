@@ -5,10 +5,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { cn } from '@/components/shared/lib/utils';
 import { HelpCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { ContentSection } from '../../components/shared/ui/content-section';
-import { SearchField } from '../../components/shared/ui/search-field';
-import { SectionHeader } from '../../components/shared/ui/section-header';
-import { ScrollTopButton } from '../../components/shared/ui/scroll-top-button';
+import { ContentSection, SearchField, SectionHeader, ScrollTopButton } from '../../components/shared/ui/';
 import { useScrollToTop } from '../../components/hooks/useScroll';
 import { useDebounce } from '../../components/hooks/useDebounce';
 
@@ -101,11 +98,11 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
   const statsContent = (
     <div className="flex flex-wrap gap-3">
       <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
-        <span className="font-medium text-orange-400 mr-2">{faqStats.totalQuestions}</span>
+        <span className="font-medium text-yellow-400 mr-2">{faqStats.totalQuestions}</span>
         <span>вопросов</span>
       </div>
       <div className="bg-slate-800/90 px-4 py-2 rounded-lg text-slate-300 flex items-center">
-        <span className="font-medium text-orange-400 mr-2">{faqStats.totalCategories}</span>
+        <span className="font-medium text-yellow-400 mr-2">{faqStats.totalCategories}</span>
         <span>категорий</span>
       </div>
     </div>
@@ -153,8 +150,8 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
               {filteredFAQs.map((section, sectionIndex) => (
                 <li key={sectionIndex} className="p-6">
                   <div className="flex items-center mb-4">
-                    <div className="w-3 h-3 bg-orange-400 rounded-full mr-3"></div>
-                    <h2 className="text-xl text-orange-400 font-bold">{section.title}</h2>
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                    <h2 className="text-xl text-yellow-400 font-bold">{section.title}</h2>
                   </div>
                   <ul className="space-y-4">
                     {section.faqs.map((faq, faqIndex) => {
@@ -175,7 +172,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
               ))}
               {!debouncedSearch && faqExtraNote && (
                 <div className="p-6 border-t border-slate-700/50">
-                  <h2 className="text-xl text-orange-400 font-bold mb-2">{faqExtraNote.title}</h2>
+                  <h2 className="text-xl text-yellow-400 font-bold mb-2">{faqExtraNote.title}</h2>
                   <div className="text-slate-300 bg-slate-700/30 p-4 rounded-lg space-y-3">
                     {faqExtraNote.paragraphs.map((p, i) => (
                       <p key={i}>{p}</p>

@@ -106,12 +106,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             />
           ) : (
             <div className="w-16 h-16 bg-slate-700 rounded-full mr-4 flex items-center justify-center">
-              <span className="text-orange-400 font-bold text-2xl">{product.name.charAt(0)}</span>
+              <span className="text-yellow-400 font-bold text-2xl">{product.name.charAt(0)}</span>
             </div>
           )}
           <div>
             <h3 className="text-2xl font-bold">{product.name}</h3>
-            <p className="text-orange-400 font-bold">{product.price}</p>
+            <p className="text-yellow-400 font-bold">{product.price}</p>
           </div>
         </div>
         

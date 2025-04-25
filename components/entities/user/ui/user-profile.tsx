@@ -167,7 +167,7 @@ const UserProfile: React.FC<Props> = ({
   };
 
   return (
-    <div className={cn("relative min-h-screen bg-slate-900", className)}>
+    <div className={cn("relative min-h-screen bg-slate-900/70", className)}>
       
       <main className="container mx-auto px-4 py-12">
         <div className="bg-gradient-to-br from-slate-800 to-slate-700 text-white p-8 rounded-xl shadow-xl max-w-6xl mx-auto">
@@ -206,20 +206,7 @@ const UserProfile: React.FC<Props> = ({
 
           {/* Сетка с информацией */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InfoCard title="Игровая статистика">
-              <InfoRow icon={<Clock size={20} />} label="Время игры" value={userData.playTime || '0 ч'} />
-              <InfoRow icon={<Coins size={20} />} label="Монеты" value={userData.coins} />
-              <InfoRow icon={<Ghost size={20} />} label="Души" value={userData.souls} />
-              <InfoRow icon={<Coins size={20} />} label="Баланс" value={`$${userData.balance.toFixed(2)}`} />
-            </InfoCard>
-            
-            <InfoCard title="Информация об аккаунте">
-              <InfoRow icon={<Calendar size={20} />} label="Дата регистрации" value={userData.registrationDate || '---'} />
-              <InfoRow icon={<LogIn size={20} />} label="Последний вход" value={userData.lastLogin || '---'} />
-              {userData.lastPurchase && <InfoRow icon={<ShoppingCart size={20} />} label="Последняя покупка" value={userData.lastPurchase} />}
-            </InfoCard>
-
-            <InfoCard title="Статистика сервера">
+          <InfoCard title="Статистика сервера">
               <InfoRow icon={<Users size={20} />} label="Онлайн игроков" value={userData.onlinePlayers} />
               <InfoRow icon={<Users size={20} />} label="Всего игроков" value={userData.totalPlayers} />
             </InfoCard>
@@ -241,6 +228,20 @@ const UserProfile: React.FC<Props> = ({
                 />
               </div>
             </InfoCard>
+
+            <InfoCard title="Игровая статистика">
+              <InfoRow icon={<Clock size={20} />} label="Время игры" value={userData.playTime || '0 ч'} />
+              <InfoRow icon={<Coins size={20} />} label="Монеты" value={userData.coins} />
+              <InfoRow icon={<Ghost size={20} />} label="Души" value={userData.souls} />
+
+            </InfoCard>
+            
+            <InfoCard title="Информация об аккаунте">
+              <InfoRow icon={<Calendar size={20} />} label="Дата регистрации" value={userData.registrationDate || '---'} />
+              <InfoRow icon={<LogIn size={20} />} label="Последний вход" value={userData.lastLogin || '---'} />
+              <InfoRow icon={<Coins size={20} />} label="Баланс" value={`₽ ${userData.balance.toFixed(2)}`} />
+              {userData.lastPurchase && <InfoRow icon={<ShoppingCart size={20} />} label="Последняя покупка" value={userData.lastPurchase} />}
+            </InfoCard>
           </div>
 
           {/* Секция кнопок */}
@@ -250,17 +251,17 @@ const UserProfile: React.FC<Props> = ({
               <Button 
                 color='green'
                 text='Разработчик'
-                className='w-full sm:w-auto px-8 py-3 text-lg font-medium'
+                className='w-full sm:w-auto px-8 py-3'
               />
               <Button 
                 color='orange'
                 text='Модератор'
-                className='w-full sm:w-auto px-8 py-3 text-lg font-medium'
+                className='w-full sm:w-auto px-8 py-3'
               />
               <Button 
                 color='blue'
                 text='Билдер'
-                className='w-full sm:w-auto px-8 py-3 text-lg font-medium'
+                className='w-full sm:w-auto px-8 py-3'
               />
             </div>
           </div>

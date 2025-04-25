@@ -5,10 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { cn } from '@/components/shared/lib/utils';
 import { AlertTriangle } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { ContentSection } from '../../components/shared/ui/content-section';
-import { SearchField } from '../../components/shared/ui/search-field';
-import { SectionHeader } from '../../components/shared/ui/section-header';
-import { ScrollTopButton } from '../../components/shared/ui/scroll-top-button';
+import { ContentSection, SearchField, SectionHeader, ScrollTopButton } from '../../components/shared/ui/';
 import { useScrollToTop, useActiveSection } from '../../components/hooks/useScroll';
 import { useDebounce } from '../../components/hooks/useDebounce';
 
@@ -106,7 +103,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
           className={cn(
             "px-4 py-2 text-sm rounded-full transition-all",
             activeSection === section.id
-              ? "bg-orange-400 text-slate-900 font-medium shadow-lg shadow-orange-400/20"
+              ? "bg-yellow-400 text-slate-900 font-medium shadow-lg shadow-yellow-400/20"
               : "bg-slate-800/90 text-slate-300 hover:bg-slate-700"
           )}
           onClick={() => scrollToSection(section.id)}

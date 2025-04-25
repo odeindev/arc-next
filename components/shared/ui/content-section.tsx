@@ -18,7 +18,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
   children
 }) => {
   return (
-    <div className={`bg-slate-800 pb-16 ${className}`}>
+    <div className={`bg-slate-700 pb-16 ${className}`}>
       <div className='flex flex-col items-center pt-8 pb-6 space-y-4'>
         {iconSrc && (
           <Image

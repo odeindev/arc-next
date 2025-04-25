@@ -87,7 +87,7 @@ export const BonusSection: React.FC = () => {
               <Button 
                   color="yellow" 
                   text="Получить бонусы" 
-                  className="w-full sm:w-auto px-8 py-3 text-lg font-semibold transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,0,0.4)]"
+                  className="w-full sm:w-auto px-8 py-3 text-lg transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,0,0.4)]"
                   aria-label="Получить игровые бонусы"
               />
             </div>

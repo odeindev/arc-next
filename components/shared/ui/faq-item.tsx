@@ -23,7 +23,7 @@ export const FAQItem = React.memo(({
     <li
       className={cn(
         "bg-slate-700/30 rounded-lg overflow-hidden transition-all duration-300",
-        isOpen ? "ring-1 ring-orange-400/30 shadow-lg shadow-orange-400/5" : ""
+        isOpen ? "ring-1 ring-yellow-400/30 shadow-lg shadow-yellow-400/5" : ""
       )}
     >
       <button
@@ -43,7 +43,7 @@ export const FAQItem = React.memo(({
             isOpen ? "rotate-180" : "rotate-0"
           )}
         >
-          <ChevronDown size={20} className="text-orange-400 flex-shrink-0" />
+          <ChevronDown size={20} className="text-yellow-400 flex-shrink-0" />
         </div>
       </button>
 

@@ -36,7 +36,6 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
                   href={link.href} 
                   className='text-gray-200 font-medium text-sm md:text-base relative group flex items-center gap-2 transition-all duration-300 hover:text-teal-400'
                 >
-                  {/* Предполагаем, что у нас есть иконки для социальных сетей */}
                   {link.icon && (
                     <span className='text-teal-500 group-hover:scale-110 transition-transform duration-300'>
                       {link.icon}

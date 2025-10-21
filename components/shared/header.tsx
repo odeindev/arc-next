@@ -1,3 +1,4 @@
+// components/shared/header.tsx
 'use client';
 
 import { cn } from '@/components/shared/lib/utils';
@@ -6,11 +7,9 @@ import Link from "next/link";
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Container, Button } from '@/components/shared/ui';
-import { LoginForm, RegistrationForm } from '../features/auth/ui';
+import { AuthModal, useAuthModal } from '@/components/widgets/auth-modal';
 import { navLinks } from '@/public/data/links';
 import { usePathname } from 'next/navigation';
-
-type FormType = 'login' | 'register' | null;
 
 interface HeaderProps {
   className?: string;
@@ -18,26 +17,27 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ className }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeForm, setActiveForm] = useState<FormType>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  
+  // Используем хук для управления модальным окном
+  const authModal = useAuthModal();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const formRef = useRef<HTMLDivElement | null>(null);
 
   const toggleMenu = useCallback(() => {
     setIsMenuOpen(prev => !prev);
-    setActiveForm(null);
   }, []);
 
-  const openForm = useCallback((form: FormType) => {
-    setActiveForm(prev => prev === form ? null : form);
+  const handleOpenLogin = useCallback(() => {
+    authModal.open('login');
     setIsMenuOpen(false);
-  }, []);
+  }, [authModal]);
 
-  const closeForm = useCallback(() => {
-    setActiveForm(null);
-  }, []);
+  const handleOpenRegister = useCallback(() => {
+    authModal.open('register');
+    setIsMenuOpen(false);
+  }, [authModal]);
 
   // Отслеживание скролла для изменения фона
   useEffect(() => {
@@ -49,21 +49,21 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Закрытие при клике вне форм/меню
+  // Закрытие при клике вне меню
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const isOutsideMenu = !menuRef.current?.contains(event.target as Node);
-      const isOutsideForm = !formRef.current?.contains(event.target as Node);
 
-      if (isOutsideMenu && isOutsideForm) {
+      if (isOutsideMenu) {
         setIsMenuOpen(false);
-        setActiveForm(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
 
   const renderNavLinks = (isMobile = false) => (
     <ul className={cn(
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             buttonClassName,
             'transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/20 hover:scale-105'
           )} 
-          onClick={() => openForm('login')} 
+          onClick={handleOpenLogin}
         />
         <Button 
           color='blue' 
@@ -113,102 +113,98 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
             buttonClassName,
             'transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105'
           )} 
-          onClick={() => openForm('register')} 
+          onClick={handleOpenRegister}
         />
       </div>
     );
   };
 
   return (
-    <header 
-      className={cn(
-        'font-[Mulish] top-0 left-0 right-0 w-full z-50 transition-all duration-300',
-        isScrolled 
-          ? 'backdrop-blur-md bg-gray-900/90 shadow-xl' 
-          : 'bg-gradient-to-b from-gray-900/90 to-slate-800/80 shadow-lg',
-        className
-      )}
-    >
-      <Container className='py-4 px-4 lg:px-16'>
-        <div className='flex items-center justify-between'>
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-1 group">
-            <div className="relative overflow-hidden">
-              <Image 
-                src='/icons/logo.svg' 
-                width={48} 
-                height={48} 
-                alt='Logo' 
-                className='transition-all duration-500 ease-in-out group-hover:rotate-12 group-hover:scale-110' 
-              />
+    <>
+      <header 
+        className={cn(
+          'font-[Mulish] top-0 left-0 right-0 w-full z-50 transition-all duration-300',
+          isScrolled 
+            ? 'backdrop-blur-md bg-gray-900/90 shadow-xl' 
+            : 'bg-gradient-to-b from-gray-900/90 to-slate-800/80 shadow-lg',
+          className
+        )}
+      >
+        <Container className='py-4 px-4 lg:px-16'>
+          <div className='flex items-center justify-between'>
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-1 group">
+              <div className="relative overflow-hidden">
+                <Image 
+                  src='/icons/logo.svg' 
+                  width={48} 
+                  height={48} 
+                  alt='Logo' 
+                  className='transition-all duration-500 ease-in-out group-hover:rotate-12 group-hover:scale-110' 
+                />
+              </div>
+              <h1 className="font-[Chakra_Petch] text-white font-semibold text-xl hidden sm:block transition-all duration-300 group-hover:text-teal-300">
+                Arcadia Craft
+              </h1>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className='hidden md:flex space-x-6'>
+              {renderNavLinks()}
+            </nav>
+
+            {/* Authentication Buttons */}
+            <div className='hidden md:flex space-x-2'>
+              {renderAuthButtons()}
             </div>
-            <h1 className="font-[Chakra_Petch] text-white font-semibold text-xl hidden sm:block transition-all duration-300 group-hover:text-teal-300">
-              Arcadia Craft
-            </h1>
-          </Link>
 
-          {/* Desktop Navigation */}
-          <nav className='hidden md:flex space-x-6'>
-            {renderNavLinks()}
-          </nav>
-
-          {/* Authentication Buttons */}
-          <div className='hidden md:flex space-x-2'>
-            {renderAuthButtons()}
+            {/* Mobile Menu Button */}
+            <button 
+              className='md:hidden text-white p-1 rounded-md transition-all duration-300 hover:bg-white/10' 
+              onClick={toggleMenu}
+              aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            >
+              {isMenuOpen ? (
+                <X size={28} className='transition-transform duration-300 rotate-90' />
+              ) : (
+                <Menu size={28} className='transition-transform duration-300' />
+              )}
+            </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            className='md:hidden text-white p-1 rounded-md transition-all duration-300 hover:bg-white/10' 
-            onClick={toggleMenu}
-            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-          >
-            {isMenuOpen ? (
-              <X size={28} className='transition-transform duration-300 rotate-90' />
-            ) : (
-              <Menu size={28} className='transition-transform duration-300' />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden" aria-hidden="true" />
-        )}
-        <nav 
-          ref={menuRef}
-          className={cn(
-            'mt-4 p-6 md:hidden flex flex-col items-center gap-4 bg-gray-800 rounded-lg shadow-xl',
-            'transition-all duration-300 ease-in-out',
-            isMenuOpen 
-              ? 'opacity-100 translate-y-0' 
-              : 'opacity-0 -translate-y-4 pointer-events-none absolute'
+          {/* Mobile Navigation */}
+          {isMenuOpen && (
+            <div className="inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden" aria-hidden="true" />
           )}
-        >
-          {renderNavLinks(true)}
-          <div className='mt-6 w-full'>
-            {renderAuthButtons(true)}
-          </div>
-        </nav>
+          <nav 
+            ref={menuRef}
+            className={cn(
+              'mt-4 p-6 md:hidden flex flex-col items-center gap-4 bg-gray-800 rounded-lg shadow-xl',
+              'transition-all duration-300 ease-in-out',
+              isMenuOpen 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 -translate-y-4 pointer-events-none absolute'
+            )}
+          >
+            {renderNavLinks(true)}
+            <div className='mt-6 w-full'>
+              {renderAuthButtons(true)}
+            </div>
+          </nav>
+        </Container>
+      </header>
 
-        {/* Forms */}
-        <div ref={formRef}>
-        {activeForm === 'login' && (
-          <LoginForm 
-            isOpen={true} 
-            closeForm={closeForm} 
-            setIsAnyFormOpen={() => setActiveForm(null)}
-          />
-        )}
-        {activeForm === 'register' && (
-          <RegistrationForm 
-            isOpen={true} 
-            closeForm={closeForm} 
-            setIsAnyFormOpen={() => setActiveForm(null)}
-          />
-        )}
-        </div>
-      </Container>
-    </header>
+      {/* Auth Modal - рендерится отдельно */}
+      <AuthModal
+        isOpen={authModal.isOpen}
+        view={authModal.view}
+        verificationData={authModal.verificationData}
+        onClose={authModal.close}
+        onSwitchToLogin={authModal.switchToLogin}
+        onSwitchToRegister={authModal.switchToRegister}
+        onSwitchToReset={authModal.switchToReset}
+        onSwitchToVerification={authModal.switchToVerification}
+      />
+    </>
   );
 };

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/components/shared/lib/utils';
 import { Button } from '@/components/shared/ui/button';
 import Image from 'next/image';
-import { UserCircle, Coins, Ghost, Clock, Calendar, LogIn, ShoppingCart, Users } from 'lucide-react';
+import { UserCircle, Banknote, Ghost, Clock, Calendar, LogIn, ShoppingCart, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface CustomUser {
@@ -24,7 +24,7 @@ interface PlayerProfileProps {
   privilegeExpiration: string | null;
   position: string | null;
   playTime: string;
-  coins: number;
+  Banknote: number;
   souls: number;
   balance: number;
   registrationDate: string;
@@ -81,7 +81,7 @@ const UserProfile: React.FC<Props> = ({
     privilegeExpiration: providedProps.privilegeExpiration || '---',
     position: providedProps.position || null,
     playTime: providedProps.playTime || '0 ч',
-    coins: providedProps.coins || 0,
+    Banknote: providedProps.Banknote || 0,
     souls: providedProps.souls || 0,
     balance: providedProps.balance || 0.0,
     registrationDate: providedProps.registrationDate || '---',
@@ -231,7 +231,7 @@ const UserProfile: React.FC<Props> = ({
 
             <InfoCard title="Игровая статистика">
               <InfoRow icon={<Clock size={20} />} label="Время игры" value={userData.playTime || '0 ч'} />
-              <InfoRow icon={<Coins size={20} />} label="Монеты" value={userData.coins} />
+              <InfoRow icon={<Banknote size={20} />} label="Монеты" value={userData.Banknote} />
               <InfoRow icon={<Ghost size={20} />} label="Души" value={userData.souls} />
 
             </InfoCard>
@@ -239,7 +239,7 @@ const UserProfile: React.FC<Props> = ({
             <InfoCard title="Информация об аккаунте">
               <InfoRow icon={<Calendar size={20} />} label="Дата регистрации" value={userData.registrationDate || '---'} />
               <InfoRow icon={<LogIn size={20} />} label="Последний вход" value={userData.lastLogin || '---'} />
-              <InfoRow icon={<Coins size={20} />} label="Баланс" value={`₽ ${userData.balance.toFixed(2)}`} />
+              <InfoRow icon={<Banknote size={20} />} label="Баланс" value={`₽ ${userData.balance.toFixed(2)}`} />
               {userData.lastPurchase && <InfoRow icon={<ShoppingCart size={20} />} label="Последняя покупка" value={userData.lastPurchase} />}
             </InfoCard>
           </div>

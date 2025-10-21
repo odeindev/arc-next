@@ -76,7 +76,7 @@ export const BonusSection: React.FC = () => {
                     transition={{ delay: index * 0.1 + 0.3, duration: 0.4 }}
                     viewport={{ once: true }}
                   >
-                    <span className="text-yellow-400 text-2xl flex-shrink-0 leading-none" aria-hidden="true">★</span>
+                    <span className="text-green-400 text-2xl flex-shrink-0 leading-none" aria-hidden="true">♦</span>
                     <span className="text-white text-lg">{benefit}</span>
                   </motion.li>
                 ))}

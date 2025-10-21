@@ -20,19 +20,19 @@ enum ProductType {
 }
 
 enum Duration {
-  d30
-  d60
-  d90
+  DAYS_30
+  DAYS_60
+  DAYS_90
 }
 
 model User {
-  id                String    @id @default(cuid())
+  id                String    @id @default(nanoid(12))
   email             String    @unique
   username          String    @default("")
   password          String
   emailVerified     Boolean   @default(false)
   createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
   cart              Cart?
   orders            Order[]
   emailVerifications EmailVerification[]
@@ -40,8 +40,8 @@ model User {
 }
 
 model EmailVerification {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(nanoid(12))
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
   code       String
   expiresAt  DateTime
@@ -49,8 +49,8 @@ model EmailVerification {
 }
 
 model PasswordReset {
-  id         String   @id @default(cuid())
-  user       User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(nanoid(12))
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
   token      String
   expiresAt  DateTime
@@ -58,7 +58,7 @@ model PasswordReset {
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String      @id @default(nanoid(12))
   name        String
   type        ProductType
   price       Float
@@ -66,21 +66,21 @@ model Product {
   benefits    String[]
   icon        String?
   createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   cartItems   CartItem[]
 }
 
 model Cart {
-  id        String    @id @default(cuid())
+  id        String    @id @default(nanoid(12))
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String    @unique
   items     CartItem[]
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model CartItem {
-  id         String     @id @default(cuid())
+  id         String     @id @default(nanoid(12))
   cart       Cart       @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId     String
   product    Product    @relation(fields: [productId], references: [id])
@@ -88,25 +88,25 @@ model CartItem {
   quantity   Int        @default(1)
   duration   Duration?  
   createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@unique([cartId, productId])
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  user       User        @relation(fields: [userId], references: [id])
+  id         String      @id @default(nanoid(12))
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
   items      OrderItem[]
   total      Float
   status     OrderStatus
   createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   payment    Payment?
 }
 
 model OrderItem {
-  id          String      @id @default(cuid())
+  id          String      @id @default(nanoid(12))
   order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String
   productId   String
@@ -119,8 +119,8 @@ model OrderItem {
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  order       Order    @relation(fields: [orderId], references: [id])
+  id          String   @id @default(nanoid(12))
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String   @unique
   status      String  
   method      String   

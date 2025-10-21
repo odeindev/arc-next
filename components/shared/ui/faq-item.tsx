@@ -11,7 +11,7 @@ interface FAQItemProps {
   searchQuery?: string;
 }
 
-const FAQItem: React.FC<FAQItemProps> = ({
+export const FAQItem: React.FC<FAQItemProps> = ({
   question,
   answer,
   isOpen,

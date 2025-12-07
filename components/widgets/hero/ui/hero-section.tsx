@@ -16,7 +16,7 @@ import { GALLERY_IMAGES_AVIF } from '@/public/images/index';
 export const HeroSection = ({
   className,
   serverVersion = '1.18.2',
-  serverIp = 'arcadia-craft.net',
+  serverIp = 'arc-craft.net',
 }: HeroProps) => {
   const [copied, setCopied] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -168,7 +168,7 @@ export const HeroSection = ({
         'relative w-full h-[1080px] min-h-screen overflow-hidden',
         className
       )}
-      aria-label="Главная секция Arcadia Craft"
+      aria-label="Главная секция Arc Craft"
     >
       {/* Фоновое изображение с параллакс-эффектом */}
       <div 
@@ -199,7 +199,7 @@ export const HeroSection = ({
               <div className="relative inline-block">
                 <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 text-white font-chakra-petch">
                   <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-400 text-transparent bg-clip-text">
-                    ARCADIA CRAFT
+                    ARC CRAFT
                   </span>
                 </h1>
                 {/* Декоративная линия под названием */}
@@ -214,8 +214,8 @@ export const HeroSection = ({
                 isVisible ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-10"
               )}
             >
-              Исследуйте захватывающий мир, воплощайте креативные идеи и объединяйтесь с единомышленниками.
-              Погрузитесь в атмосферу древнегреческой эстетики, где каждый игрок найдет свое неповторимое приключение.
+             Погрузитесь в мир тайн и вдохновения, где каждая идея оживает, а единомышленники становятся вашей силой. 
+             Окунитесь в античную атмосферу и создайте свою легенду.
             </p>
 
             {/* Индикаторы карусели */}

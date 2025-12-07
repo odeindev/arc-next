@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
                 />
               </div>
               <span className='font-[Chakra_Petch] text-white font-semibold text-xl md:text-2xl transition-all duration-300 group-hover:text-teal-400'>
-                Arcadia Craft
+                Arc Craft
               </span>
             </Link>
           </div>
@@ -59,7 +59,7 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
           <p className='text-gray-300 text-sm'>
             © {new Date().getFullYear()} 
             <Link href='/' className='inline-block ml-1 text-white font-medium hover:text-teal-400 transition-colors duration-300'>
-              Arcadia Craft™.
+              Arc Craft™.
             </Link> 
             <span className='text-gray-400'> Все права защищены.</span>
           </p>

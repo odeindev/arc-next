@@ -1,6 +1,6 @@
-# Arcadia Craft
+# Arc Craft
 
-Arcadia Craft — веб-сервис для управления аккаунтами игроков, продажи внутриигровых ключей и привилегий, а также предоставления базовой поддержки и внутренних заявок для команды сервера.
+Arc Craft — веб-сервис для управления аккаунтами игроков, продажи внутриигровых ключей и привилегий, а также предоставления базовой поддержки и внутренних заявок для команды сервера.
 
 - [Русская версия](#русская-версия)
 - [English version](#english-version)
@@ -96,24 +96,6 @@ npm run dev
 - Email-подтверждение через Resend.
 - Оплата — интеграция с платёжным провайдером.
 
-### Статус разработки и план (roadmap)
-
-**Backend**
-1. Регистрация пользователя.  
-   1.1 Подтверждение аккаунта по почте.  
-2. Авторизация пользователя.  
-   2.1 Сброс пароля по почте.  
-3. Привязка игрового никнейма к аккаунту.  
-   3.1 Отображение данных игрока в личном кабинете после привязки.  
-4. Логика обработки заказов.  
-   4.1 Интеграция платёжной системы.
-
-**Frontend**
-- Формы регистрации, авторизации и восстановления пароля в модальных окнах.  
-- Личный кабинет: привязка никнейма и базовый вывод данных.  
-- Магазин и корзина (Zustand).  
-- Страница оформления заказа реализована.
-
 ### Развёртывание
 ```bash
 npm run build
@@ -136,7 +118,7 @@ npm start
 ## English version
 
 ### Overview
-Arcadia Craft is a web service for player account management, in-game keys & perks store, order processing, and lightweight support tooling for a game server team.
+Arc Craft is a web service for player account management, in-game keys & perks store, order processing, and lightweight support tooling for a game server team.
 
 ### Key Features
 - Sign-up with email verification.
@@ -205,21 +187,7 @@ dev, build, start, lint, prisma, analyze
 - Next.js API routes / route handlers.  
 - Authentication via NextAuth (JWT).  
 - Email verification via Resend.  
-- Payment provider integration (in progress).
-
-### Roadmap
-
-**Backend**
-1. User registration (with email verification)  
-2. User authorization (with password reset)  
-3. Link game nickname to account; show player data after linking  
-4. Order processing; payment provider integration
-
-**Frontend**
-- Modal-based auth & recovery forms  
-- User dashboard with nickname linking  
-- Store & cart (Zustand)  
-- Checkout page implemented
+- Payment provider integration.
 
 ### Deployment
 ```bash

@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
                 />
               </div>
               <h1 className="font-[Chakra_Petch] text-white font-semibold text-xl hidden sm:block transition-all duration-300 group-hover:text-teal-300">
-                Arcadia Craft
+                Arc Craft
               </h1>
             </Link>
 

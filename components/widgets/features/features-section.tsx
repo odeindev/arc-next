@@ -23,7 +23,7 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = memo(({ className
               className="text-white font-bold text-3xl md:text-4xl relative inline-block"
             >
               Что делает наш сервер особенным?
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-yellow-400 rounded-full mt-2"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-amber-400 rounded-full mt-2"></span>
             </h2>
           </div>
           

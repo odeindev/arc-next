@@ -19,7 +19,7 @@ export const ScrollTopButton: React.FC<ScrollTopButtonProps> = ({ show, onClick 
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.2 }}
-          className="fixed bottom-6 right-6 bg-yellow-400 text-slate-900 p-3 rounded-full shadow-lg shadow-yellow-400/20 hover:bg-yellow-500 transition-colors"
+          className="fixed bottom-6 right-6 bg-amber-400 text-slate-900 p-3 rounded-full shadow-lg shadow-amber-400/20 hover:bg-amber-500 transition-colors"
           onClick={onClick}
           aria-label="Прокрутить вверх"
         >

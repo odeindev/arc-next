@@ -7,12 +7,12 @@ export const ServerErrorPage = () => (
     code="500"
     title="Внутренняя ошибка сервера."
     description="Что-то пошло не так. Пожалуйста, попробуйте позже."
-    buttonColor="yellow"
+    buttonColor="amber"
     decorationColors={{
       primary: 'orange-700',
-      secondary: 'yellow-600'
+      secondary: 'amber-600'
     }}
-    decorationGradient="from-yellow-500 to-orange-500"
+    decorationGradient="from-amber-500 to-orange-500"
   />
 );
   

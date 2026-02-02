@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, ReactNode } from 'react';
 
 interface ButtonProps {
-  color: 'green' | 'blue' | 'orange' | 'yellow' | 'purple' | 'turquoise' | 'red';
+  color: 'green' | 'blue' | 'orange' | 'amber' | 'purple' | 'turquoise' | 'red';
   text?: string;
   href?: string;
   onClick?: () => void;
@@ -32,7 +32,7 @@ const colorClasses = {
     boxShadow: 'hover:shadow-[0_4px_12px_-1px_rgba(249,115,22,0.3)]',
     glowColor: 'rgba(249, 115, 22, 0.6)'
   },
-  yellow: {
+  amber: {
     gradient: 'from-[rgba(234,179,8,0.3)] to-[rgba(202,138,4,0.3)] hover:from-[rgba(234,179,8,0.4)] hover:to-[rgba(202,138,4,0.4)]',
     border: 'border-[rgba(234,179,8,0.5)]',
     boxShadow: 'hover:shadow-[0_4px_12px_-1px_rgba(234,179,8,0.3)]',

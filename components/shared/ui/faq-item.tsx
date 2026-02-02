@@ -26,7 +26,7 @@ export const FAQItem: React.FC<FAQItemProps> = ({
     if (!searchQuery) return text;
     
     const regex = new RegExp(`(${searchQuery})`, 'gi');
-    return text.replace(regex, '<mark class="bg-yellow-400/30 text-white px-1 rounded">$1</mark>');
+    return text.replace(regex, '<mark class="bg-amber-400/30 text-white px-1 rounded">$1</mark>');
   };
 
   // Автоматическое раскрытие при совпадении поиска
@@ -53,15 +53,15 @@ export const FAQItem: React.FC<FAQItemProps> = ({
       ref={itemRef}
       className={cn(
         "bg-slate-800 rounded-lg shadow-sm transition-all duration-300",
-        isOpen && "ring-1 ring-yellow-400/20 shadow-md bg-slate-700/60",
+        isOpen && "ring-1 ring-amber-400/20 shadow-md bg-slate-700/60",
         searchQuery && (question.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                     answer.toLowerCase().includes(searchQuery.toLowerCase())) && "ring-1 ring-yellow-400/30"
+                     answer.toLowerCase().includes(searchQuery.toLowerCase())) && "ring-1 ring-amber-400/30"
       )}
     >
       <button
         className={cn(
           "w-full text-left px-5 py-4 rounded-lg flex items-center justify-between",
-          "focus:outline-none focus:ring-2 focus:ring-yellow-400/30 focus:ring-offset-2 focus:ring-offset-slate-800",
+          "focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:ring-offset-2 focus:ring-offset-slate-800",
           "hover:bg-slate-700/70 transition-colors",
           isOpen && "rounded-b-none"
         )}
@@ -74,7 +74,7 @@ export const FAQItem: React.FC<FAQItemProps> = ({
         />
         <ChevronDown
           className={cn(
-            "flex-shrink-0 w-5 h-5 text-yellow-400 transition-transform duration-300",
+            "flex-shrink-0 w-5 h-5 text-amber-400 transition-transform duration-300",
             isOpen && "transform rotate-180"
           )}
         />

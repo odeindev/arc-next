@@ -49,7 +49,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
           />
         </div>
         <div className="flex-1 transition-all duration-300 group-hover:translate-y-[-2px]">
-          <h3 className="text-yellow-400 font-bold text-xl mb-3 group-hover:text-yellow-300">
+          <h3 className="text-amber-400 font-bold text-xl mb-3 group-hover:text-amber-300">
             {title}
           </h3>
           <p className="text-white font-base text-base leading-relaxed">

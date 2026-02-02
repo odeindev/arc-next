@@ -103,7 +103,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
           className={cn(
             "px-4 py-2 text-sm rounded-full transition-all",
             activeSection === section.id
-              ? "bg-yellow-400 text-slate-900 font-medium shadow-lg shadow-yellow-400/20"
+              ? "bg-amber-400 text-slate-900 font-medium shadow-lg shadow-amber-400/20"
               : "bg-slate-800/90 text-slate-300 hover:bg-slate-500"
           )}
           onClick={() => scrollToSection(section.id)}

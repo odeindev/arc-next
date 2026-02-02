@@ -1,86 +1,76 @@
 // components/hooks/useScroll.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+const HIGHLIGHT_DURATION = 2000; // Время подсветки секции в мс
+const SCROLL_LOCK_DURATION = 500; // Длительность блокировки при программной прокрутке
+
+/**
+ * Хук для отслеживания активной секции на странице и плавной прокрутки
+ */
 export function useActiveSection<T extends { id: string }>(sections: T[]) {
   const [activeSection, setActiveSection] = useState<string>('');
   const [highlightedSection, setHighlightedSection] = useState<string>('');
-  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
-  const observer = useRef<IntersectionObserver | null>(null);
-  const scrollingToSection = useRef<boolean>(false);
 
-  // Функция для установки ref элемента
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+  const scrollingToSection = useRef(false);
+  const highlightTimeout = useRef<number | null>(null);
+  const scrollLockTimeout = useRef<number | null>(null);
+
+  // Устанавливаем ref для секции
   const setSectionRef = useCallback((element: HTMLElement | null, id: string) => {
-    if (element) {
-      sectionRefs.current[id] = element;
-    }
+    if (element) sectionRefs.current[id] = element;
   }, []);
 
-  // Настраиваем IntersectionObserver для отслеживания видимых секций
+  // IntersectionObserver для отслеживания видимых секций
   useEffect(() => {
-    // Очищаем предыдущий observer
-    if (observer.current) {
-      observer.current.disconnect();
-    }
+    if (!sections.length) return;
 
-    // Создаем новый observer
-    observer.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        // Не обновляем активную секцию, если прокрутка программная
         if (scrollingToSection.current) return;
 
         const visibleSections = entries
           .filter(entry => entry.isIntersecting)
           .map(entry => entry.target.id);
-          
+
         if (visibleSections.length > 0) {
-          // Используем первую видимую секцию как активную
           setActiveSection(visibleSections[0]);
         }
       },
       {
-        rootMargin: '-10% 0px -70% 0px', // Настраиваем область видимости
-        threshold: 0.1 // 10% элемента должно быть видимо
+        rootMargin: '-10% 0px -70% 0px',
+        threshold: 0.1
       }
     );
 
-    // Добавляем все секции в observer
-    Object.values(sectionRefs.current).forEach(ref => {
-      if (ref) observer.current?.observe(ref);
-    });
+    Object.values(sectionRefs.current).forEach(el => el && observer.observe(el));
 
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [sections]);
+    return () => observer.disconnect();
+  }, [sections.map(s => s.id).join(',')]); // мемоизация по id секций
 
-  // Функция прокрутки к секции с подсветкой
+  // Функция плавной прокрутки к секции
   const scrollToSection = useCallback((id: string) => {
     const element = sectionRefs.current[id];
     if (!element) return;
 
+    // Блокируем обновление activeSection от IntersectionObserver
     scrollingToSection.current = true;
-    
-    // Плавная прокрутка к секции
-    element.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
-    });
 
-    // Подсвечиваем секцию
-    setHighlightedSection(id);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSection(id);
+    setHighlightedSection(id);
 
-    // Сбрасываем флаг после завершения прокрутки
-    setTimeout(() => {
-      scrollingToSection.current = false;
-    }, 1000);
-
-    // Сбрасываем подсветку через 2 секунды
-    setTimeout(() => {
+    // Сбрасываем подсветку через HIGHLIGHT_DURATION
+    if (highlightTimeout.current) clearTimeout(highlightTimeout.current);
+    highlightTimeout.current = window.setTimeout(() => {
       setHighlightedSection('');
-    }, 2000);
+    }, HIGHLIGHT_DURATION);
+
+    // Сбрасываем блокировку IntersectionObserver через SCROLL_LOCK_DURATION
+    if (scrollLockTimeout.current) clearTimeout(scrollLockTimeout.current);
+    scrollLockTimeout.current = window.setTimeout(() => {
+      scrollingToSection.current = false;
+    }, SCROLL_LOCK_DURATION);
   }, []);
 
   return {
@@ -92,28 +82,25 @@ export function useActiveSection<T extends { id: string }>(sections: T[]) {
 }
 
 /**
- * Хук для отображения кнопки "Наверх" при прокрутке
+ * Хук для показа кнопки "Наверх" и прокрутки наверх
  */
 export function useScrollToTop(threshold: number = 300) {
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
+
   useEffect(() => {
-    const checkScroll = () => {
-      setShowScrollTop(window.scrollY > threshold);
+    const handleScroll = () => {
+      const shouldShow = window.scrollY > threshold;
+      setShowScrollTop(prev => (prev !== shouldShow ? shouldShow : prev));
     };
-    
-    window.addEventListener('scroll', checkScroll);
-    checkScroll(); // Проверка начального состояния
-    
-    return () => window.removeEventListener('scroll', checkScroll);
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Проверяем начальное состояние
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [threshold]);
-  
+
   const scrollToTop = useCallback(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-  
+
   return { showScrollTop, scrollToTop };
 }

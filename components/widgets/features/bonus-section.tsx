@@ -32,7 +32,7 @@ export const BonusSection: React.FC = () => {
             viewport={{ once: true }}
           >
             <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-yellow-400/20 blur-lg animate-pulse"></div>
+              <div className="absolute -inset-4 rounded-full bg-amber-400/20 blur-lg animate-pulse"></div>
               <Image 
                 src="/images/promo.png" 
                 alt="Бонусы для игроков" 
@@ -54,16 +54,16 @@ export const BonusSection: React.FC = () => {
             <div>
               <h2 className="text-3xl sm:text-4xl xl:text-5xl font-bold text-white mb-4 leading-tight">
                 Эксклюзивные бонусы <br className="hidden md:block" />
-                <span className="text-yellow-400">ждут тебя!</span>
+                <span className="text-amber-400">ждут тебя!</span>
               </h2>
-              <div className="h-1 w-24 bg-yellow-400 rounded-full mx-auto lg:mx-0 mb-6"></div>
+              <div className="h-1 w-24 bg-amber-400 rounded-full mx-auto lg:mx-0 mb-6"></div>
               <p className="text-lg xl:text-xl text-slate-200 mb-6 max-w-2xl">
                 Зарегистрируйся сейчас и получи мощный старт в игре
               </p>
             </div>
 
             <div className="bg-slate-700/80 backdrop-blur-sm p-6 rounded-xl border border-slate-600/40 shadow-lg">
-              <h3 className="text-2xl font-semibold text-yellow-300 mb-4">
+              <h3 className="text-2xl font-semibold text-amber-300 mb-4">
                 Твои награды:
               </h3>
               <ul className="space-y-4 text-left">
@@ -85,7 +85,7 @@ export const BonusSection: React.FC = () => {
 
             <div className="pt-6">
               <Button 
-                  color="yellow" 
+                  color="amber" 
                   text="Получить бонусы" 
                   className="w-full sm:w-auto px-8 py-3 text-lg transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,0,0.4)] active:bg-black"
                   aria-label="Получить игровые бонусы"

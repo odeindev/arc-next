@@ -38,9 +38,9 @@ const CartList: React.FC<CartListProps> = ({
   
   return (
     <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden mb-8 shadow-xl">
-      <div className="bg-gradient-to-r from-slate-700 to-slate-700/70 p-6 rounded-t-xl border-l-4 border-yellow-400 shadow-lg shadow-yellow-500/5">
+      <div className="bg-gradient-to-r from-slate-700 to-slate-700/70 p-6 rounded-t-xl border-l-4 border-amber-400 shadow-lg shadow-amber-500/5">
         <h2 className="text-2xl text-white font-bold flex items-center">
-          <ShoppingCart className="mr-3 text-yellow-400" size={24} />
+          <ShoppingCart className="mr-3 text-amber-400" size={24} />
           Товары в корзине ({items.length})
         </h2>
       </div>

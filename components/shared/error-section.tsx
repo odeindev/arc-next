@@ -9,7 +9,7 @@ interface ErrorSectionProps {
   code: string;
   title: string;
   description: string;
-  buttonColor?: 'orange' | 'purple' | 'yellow';
+  buttonColor?: 'orange' | 'purple' | 'amber';
   className?: string;
   backgroundGradient?: string;
   decorationGradient?: string;

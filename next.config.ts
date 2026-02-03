@@ -6,7 +6,24 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
-  // твои настройки
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+  webpack: (config) => {
+    config.optimization.splitChunks = {
+      chunks: 'all',
+      cacheGroups: {
+        default: false,
+        vendors: false,
+        commons: {
+          name: 'commons',
+          chunks: 'all',
+          minChunks: 2,
+        },
+      },
+    };
+    return config;
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

@@ -1,5 +1,5 @@
 // @components/shared/ui/faq-item.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/components/shared/lib/utils';
 
@@ -11,7 +11,15 @@ interface FAQItemProps {
   searchQuery?: string;
 }
 
-export const FAQItem: React.FC<FAQItemProps> = ({
+// Вынесли функцию подсветки наружу для мемоизации
+const createHighlightedText = (text: string, searchQuery: string): string => {
+  if (!searchQuery) return text;
+  
+  const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark class="bg-amber-400/30 text-white px-1 rounded">$1</mark>');
+};
+
+export const FAQItem = React.memo<FAQItemProps>(({
   question,
   answer,
   isOpen,
@@ -19,38 +27,23 @@ export const FAQItem: React.FC<FAQItemProps> = ({
   searchQuery = '',
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const itemRef = useRef<HTMLLIElement>(null);
 
-  // Подсвечивание искомых терминов
-  const highlightText = (text: string) => {
-    if (!searchQuery) return text;
-    
-    const regex = new RegExp(`(${searchQuery})`, 'gi');
-    return text.replace(regex, '<mark class="bg-amber-400/30 text-white px-1 rounded">$1</mark>');
-  };
+  // Мемоизация подсвеченного текста
+  const highlightedQuestion = useMemo(
+    () => createHighlightedText(question, searchQuery),
+    [question, searchQuery]
+  );
 
-  // Автоматическое раскрытие при совпадении поиска
-  useEffect(() => {
-    if (searchQuery && 
-        (question.toLowerCase().includes(searchQuery.toLowerCase()) || 
-         answer.toLowerCase().includes(searchQuery.toLowerCase())) && 
-        !isOpen) {
-      onToggle();
-    }
-  }, [searchQuery, question, answer, isOpen, onToggle]);
+  const highlightedAnswer = useMemo(
+    () => createHighlightedText(answer, searchQuery),
+    [answer, searchQuery]
+  );
 
-  // Прокрутка к элементу при поиске
-  useEffect(() => {
-    if (searchQuery && isOpen && itemRef.current) {
-      setTimeout(() => {
-        itemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 100);
-    }
-  }, [isOpen, searchQuery]);
+  // Убрал auto-expand эффект (создавал лишние ререндеры)
+  // Вместо этого, пусть пользователь сам открывает найденные элементы
 
   return (
     <li 
-      ref={itemRef}
       className={cn(
         "bg-slate-800 rounded-lg shadow-sm transition-all duration-300",
         isOpen && "ring-1 ring-amber-400/20 shadow-md bg-slate-700/60",
@@ -70,7 +63,7 @@ export const FAQItem: React.FC<FAQItemProps> = ({
       >
         <span 
           className="text-lg font-medium text-slate-200 flex-grow pr-4"
-          dangerouslySetInnerHTML={{ __html: highlightText(question) }}
+          dangerouslySetInnerHTML={{ __html: highlightedQuestion }}
         />
         <ChevronDown
           className={cn(
@@ -80,26 +73,33 @@ export const FAQItem: React.FC<FAQItemProps> = ({
         />
       </button>
       
+      {/* Используем CSS для анимации без JS расчетов */}
       <div
         ref={contentRef}
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          !isOpen && "max-h-0 opacity-0",
-          isOpen && "max-h-[1000px] opacity-100" // Динамическая высота для анимации
+          isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         )}
-        style={{
-          maxHeight: isOpen ? (contentRef.current?.scrollHeight || 1000) + 'px' : '0',
-        }}
       >
         <div className="px-5 py-4 text-slate-300 border-t border-slate-600/20 bg-slate-800/30 rounded-b-lg">
           <div 
             className="prose prose-sm prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: highlightText(answer) }}
+            dangerouslySetInnerHTML={{ __html: highlightedAnswer }}
           />
         </div>
       </div>
     </li>
   );
-};
+}, (prevProps, nextProps) => {
+  // Кастомная функция сравнения для React.memo
+  return (
+    prevProps.question === nextProps.question &&
+    prevProps.answer === nextProps.answer &&
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.searchQuery === nextProps.searchQuery
+  );
+});
+
+FAQItem.displayName = 'FAQItem';
 
 export default FAQItem;

@@ -47,13 +47,19 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
   const [faqExtraNote, setFaqExtraNote] = useState<FAQExtraNoteType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Динамическая загрузка данных
+  // Динамическая загрузка данных из JSON
   useEffect(() => {
     const loadData = async () => {
       try {
-        const faqData = await import('@/public/data/content/faq');
-        setFaqCollection(faqData.FAQCollection);
-        setFaqExtraNote(faqData.FAQExtraNote);
+        const response = await fetch('/data/constants/faq.json');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setFaqCollection(data.collection);
+        setFaqExtraNote(data.extraNote);
       } catch (error) {
         console.error('Failed to load FAQ data:', error);
       } finally {
@@ -112,7 +118,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ className }) => {
     <div className={cn('relative min-h-screen flex flex-col', className)} ref={scrollRef}>
       <ContentSection
         title="Часто задаваемые вопросы"
-        iconSrc="/icons/faq-icon.gif"
+        iconSrc="/icons/faq-icon.webm"
         iconAlt="FAQ"
         className="flex-grow"
       >

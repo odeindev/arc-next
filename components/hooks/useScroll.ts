@@ -4,24 +4,24 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const HIGHLIGHT_DURATION = 2000; // Время подсветки секции в мс
 const SCROLL_LOCK_DURATION = 500; // Длительность блокировки при программной прокрутке
 
-/**
- * Хук для отслеживания активной секции на странице и плавной прокрутки
- */
+// Хук для отслеживания активной секции на странице и плавной прокрутки
 export function useActiveSection<T extends { id: string }>(sections: T[]) {
   const [activeSection, setActiveSection] = useState<string>('');
   const [highlightedSection, setHighlightedSection] = useState<string>('');
 
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
   const scrollingToSection = useRef(false);
-  const highlightTimeout = useRef<number | null>(null);
-  const scrollLockTimeout = useRef<number | null>(null);
+  const highlightTimeout = useRef<NodeJS.Timeout | null>(null);
+  const scrollLockTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Устанавливаем ref для секции
+  // Стабильная функция установки ref
   const setSectionRef = useCallback((element: HTMLElement | null, id: string) => {
-    if (element) sectionRefs.current[id] = element;
+    if (element) {
+      sectionRefs.current[id] = element;
+    }
   }, []);
 
-  // IntersectionObserver для отслеживания видимых секций
+  // IntersectionObserver с правильной очисткой
   useEffect(() => {
     if (!sections.length) return;
 
@@ -43,10 +43,17 @@ export function useActiveSection<T extends { id: string }>(sections: T[]) {
       }
     );
 
-    Object.values(sectionRefs.current).forEach(el => el && observer.observe(el));
+    // Наблюдаем только существующие элементы
+    const elementsToObserve = Object.values(sectionRefs.current).filter(Boolean);
+    elementsToObserve.forEach(el => el && observer.observe(el));
 
-    return () => observer.disconnect();
-  }, [sections.map(s => s.id).join(',')]); // мемоизация по id секций
+    return () => {
+      observer.disconnect();
+      // Очищаем таймауты при размонтировании
+      if (highlightTimeout.current) clearTimeout(highlightTimeout.current);
+      if (scrollLockTimeout.current) clearTimeout(scrollLockTimeout.current);
+    };
+  }, [sections]);
 
   // Функция плавной прокрутки к секции
   const scrollToSection = useCallback((id: string) => {
@@ -62,13 +69,13 @@ export function useActiveSection<T extends { id: string }>(sections: T[]) {
 
     // Сбрасываем подсветку через HIGHLIGHT_DURATION
     if (highlightTimeout.current) clearTimeout(highlightTimeout.current);
-    highlightTimeout.current = window.setTimeout(() => {
+    highlightTimeout.current = setTimeout(() => {
       setHighlightedSection('');
     }, HIGHLIGHT_DURATION);
 
     // Сбрасываем блокировку IntersectionObserver через SCROLL_LOCK_DURATION
     if (scrollLockTimeout.current) clearTimeout(scrollLockTimeout.current);
-    scrollLockTimeout.current = window.setTimeout(() => {
+    scrollLockTimeout.current = setTimeout(() => {
       scrollingToSection.current = false;
     }, SCROLL_LOCK_DURATION);
   }, []);
@@ -81,20 +88,29 @@ export function useActiveSection<T extends { id: string }>(sections: T[]) {
   };
 }
 
-/**
- * Хук для показа кнопки "Наверх" и прокрутки наверх
- */
+
+// Хук для показа кнопки "Наверх" и прокрутки наверх
 export function useScrollToTop(threshold: number = 300) {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
+    // Throttle для обработчика скролла
+    let ticking = false;
+    
     const handleScroll = () => {
-      const shouldShow = window.scrollY > threshold;
-      setShowScrollTop(prev => (prev !== shouldShow ? shouldShow : prev));
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const shouldShow = window.scrollY > threshold;
+          setShowScrollTop(prev => (prev !== shouldShow ? shouldShow : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Проверяем начальное состояние
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, [threshold]);
 

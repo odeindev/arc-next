@@ -44,15 +44,21 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const rulesData = await import('@/public/data/content/rules');
-        setRulesCollection(rulesData.RulesCollection);
+        const response = await fetch('/data/constants/rules.json');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const rulesData = await response.json();
+        setRulesCollection(rulesData);
       } catch (error) {
         console.error('Failed to load rules data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-  
+    
     loadData();
   }, []);
   
@@ -136,7 +142,7 @@ export const RulesPage: React.FC<RulesPageProps> = ({ className }) => {
       
       <ContentSection 
         title="Правила сервера"
-        iconSrc="/icons/rules-icon.gif"
+        iconSrc="/icons/rules-icon.webm"
         iconAlt="Rules"
         className="flex-grow"
       >

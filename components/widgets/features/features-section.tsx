@@ -4,7 +4,7 @@
 
 import React, { memo } from 'react';
 import { cn } from '@/components/shared/lib/utils';
-import { ServerFeaturesData } from '@/public/data/content/features';
+import { ServerFeaturesData } from '@/public/data/features';
 import { FeatureCard } from './feature-card';
 import { BonusSection } from './bonus-section';
 

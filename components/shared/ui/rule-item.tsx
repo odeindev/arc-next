@@ -1,6 +1,5 @@
 // components/shared/ui/rule-item.tsx
-import React, { useState, useCallback } from 'react';
-import { highlightText } from '@/app/utils/highlightText';
+import React, { useMemo } from 'react';
 
 interface RuleItemProps {
   rule: string;
@@ -8,23 +7,49 @@ interface RuleItemProps {
   onClick?: () => void;
 }
 
-export const RuleItem = React.memo(({ 
+// Вынесли функцию подсветки для переиспользования
+const highlightText = (text: string, query: string): React.ReactNode => {
+  if (!query) return text;
+  
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return parts.map((part, index) => 
+    regex.test(part) ? (
+      <mark key={index} className="bg-amber-400/30 text-white px-1 rounded">
+        {part}
+      </mark>
+    ) : (
+      <React.Fragment key={index}>{part}</React.Fragment>
+    )
+  );
+};
+
+export const RuleItem = React.memo<RuleItemProps>(({ 
   rule, 
   searchQuery,
   onClick
-}: RuleItemProps) => {
-  const [isFocused, setIsFocused] = useState(false);
+}) => {
+  // Мемоизация подсвеченного текста
+  const highlightedText = useMemo(
+    () => highlightText(rule, searchQuery),
+    [rule, searchQuery]
+  );
   
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick?.();
-    }
-  }, [onClick]);
+  // Обработчик клавиатуры вынесен в useMemo
+  const handleKeyDown = useMemo(
+    () => (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick?.();
+      }
+    },
+    [onClick]
+  );
   
   return (
     <li 
-      className={`
+      className="
         bg-slate-800 
         rounded-lg 
         p-4 
@@ -38,25 +63,31 @@ export const RuleItem = React.memo(({
         duration-200
         text-slate-300 
         border-l-2 
-        ${isFocused ? 'border-blue-500' : 'border-slate-600'} 
+        border-slate-600
+        hover:border-blue-500
         group 
         animate-fade-in
         cursor-pointer
-      `}
+      "
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
       tabIndex={0}
       role="button"
       aria-label={`Правило: ${rule}`}
     >
       <div className="flex items-center">
         <span className="text-slate-300 group-hover:text-white transition-colors">
-          {highlightText(rule, searchQuery)}
+          {highlightedText}
         </span>
       </div>
     </li>
+  );
+}, (prevProps, nextProps) => {
+  // Кастомная функция сравнения
+  return (
+    prevProps.rule === nextProps.rule &&
+    prevProps.searchQuery === nextProps.searchQuery &&
+    prevProps.onClick === nextProps.onClick
   );
 });
 

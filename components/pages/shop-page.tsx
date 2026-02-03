@@ -1,5 +1,5 @@
 // @components/pages/shop-page.tsx
-'use client';
+'use client'
 
 import React, { useState } from 'react';
 import { cn } from '@/components/shared/lib/utils';
@@ -110,7 +110,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ className }) => {
     
       <ContentSection 
         title="Магазин сервера"
-        iconSrc="/icons/shop-icon.gif"
+        iconSrc="/icons/shop-icon."
         iconAlt="Shop Icon"
         className="flex-grow"
       >

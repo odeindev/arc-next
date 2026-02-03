@@ -5,7 +5,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import type { FeatureItemProps } from '@/public/data/content/features';
+import type { FeatureItemProps } from '@/public/data/features';
 
 type FeatureCardProps = FeatureItemProps & {
   index: number;

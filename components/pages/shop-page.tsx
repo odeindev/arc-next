@@ -110,7 +110,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({ className }) => {
     
       <ContentSection 
         title="Магазин сервера"
-        iconSrc="/icons/shop-icon."
+        iconSrc="/icons/shop-icon.webm"
         iconAlt="Shop Icon"
         className="flex-grow"
       >

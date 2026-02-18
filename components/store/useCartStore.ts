@@ -45,10 +45,27 @@ const useCartStore = create<CartState>((set, get) => ({
     try {
       set({ isLoading: true });
       const response = await fetch("/api/cart");
-      if (response.ok) {
-        const data = await response.json();
-        set({ items: data.items, isLoading: false });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cart: ${response.status}`);
       }
+
+      const data = await response.json();
+
+      // Нормализуем данные на границе — один раз, а не в каждом рендере
+      const normalizedItems = data.items.map((item: CartItem) => ({
+        ...item,
+        product: {
+          ...item.product,
+          price:
+            typeof item.product.price === "string"
+              ? parseFloat(String(item.product.price).replace(/[^\d.]/g, ""))
+              : item.product.price,
+        },
+        duration: item.duration ?? "30-d",
+      }));
+
+      set({ items: normalizedItems, isLoading: false });
     } catch (error) {
       console.error("Error fetching cart:", error);
       set({ isLoading: false });
@@ -57,54 +74,46 @@ const useCartStore = create<CartState>((set, get) => ({
 
   syncWithServer: async () => {
     try {
-      await fetch("/api/cart", {
+      const response = await fetch("/api/cart", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: get().items }),
       });
+
+      if (!response.ok) {
+        throw new Error(
+          `Sync failed: ${response.status} ${response.statusText}`,
+        );
+      }
     } catch (error) {
       console.error("Error syncing cart with server:", error);
     }
   },
 
-  // Добавление товара в корзину
   addItem: async (product: Product, quantity = 1) => {
-    try {
-      await fetch("/api/cart/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity,
-          duration: product.type === "subscription" ? "30-d" : undefined,
-        }),
-      });
-    } catch (error) {
-      console.error("Error syncing cart with server:", error);
-    }
+    // Сохраняем предыдущее состояние для rollback
+    const previousItems = get().items;
 
+    // Оптимистично обновляем локальный стейт
     const { items } = get();
 
     if (product.type === "subscription") {
       const nonSubscriptions = items.filter(
         (item) => item.product.type !== "subscription",
       );
-
-      // Если уже есть такая привилегия — не сбрасываем duration
       const existing = items.find((item) => item.product.id === product.id);
-      const duration = existing?.duration || "30-d";
-
-      set({
-        items: [...nonSubscriptions, { product, quantity: 1, duration }],
-      });
+      const duration = existing?.duration ?? "30-d";
+      set({ items: [...nonSubscriptions, { product, quantity: 1, duration }] });
     } else if (product.type === "key") {
       const existingKeyIndex = items.findIndex(
         (item) => item.product.id === product.id,
       );
-
       if (existingKeyIndex >= 0) {
         const updatedItems = [...items];
-        updatedItems[existingKeyIndex].quantity += quantity;
+        updatedItems[existingKeyIndex] = {
+          ...updatedItems[existingKeyIndex],
+          quantity: updatedItems[existingKeyIndex].quantity + quantity,
+        };
         set({ items: updatedItems });
       } else {
         const keyCount = items.filter(
@@ -114,8 +123,32 @@ const useCartStore = create<CartState>((set, get) => ({
           set({ items: [...items, { product, quantity }] });
         } else {
           console.warn("Достигнут лимит разных ключей в корзине (максимум 4)");
+          return; // Не идём на сервер если лимит достигнут
         }
       }
+    }
+
+    // Синхронизируем с сервером, откатываем при ошибке
+    try {
+      const response = await fetch("/api/cart/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity,
+          duration: product.type === "subscription" ? "30-d" : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to add item: ${response.status} ${response.statusText}`,
+        );
+      }
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+      // Откатываем локальный стейт
+      set({ items: previousItems });
     }
   },
 

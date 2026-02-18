@@ -1,4 +1,5 @@
 // shared/ui/quantity-input/QuantityInput.tsx
+"use client";
 
 import React, { useState } from "react";
 

@@ -1,4 +1,5 @@
 // shared/ui/dropdown-portal/DropdownPortal.tsx
+"use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";

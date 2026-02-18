@@ -73,7 +73,7 @@ const CartList: React.FC<CartListProps> = ({
             onQuantityChange={onQuantityChange}
             onDurationChange={onDurationChange}
             onRemove={onRemove}
-            subtotal={calculateItemTotal(item)}
+            subtotal={calculateItemTotal(adaptedItem)} // ← было item
             isLast={index === items.length - 1}
           />
         );

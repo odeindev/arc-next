@@ -1,333 +1,137 @@
-// components/entities/cart/ui/cart-item.tsx
+// entities/cart/ui/CartItem.tsx
 
-import React, { useState, useRef, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import Image from 'next/image';
-import { Trash2, ChevronDown } from 'lucide-react';
-import { CartItem as CartItemType } from '@/components/store/useCartStore';
+import React from "react";
+import Image from "next/image";
+import { Trash2 } from "lucide-react";
+import { QuantityInput } from "@/components/shared";
+import { CartItemModel, Duration } from "../model/types";
+import { MAX_QUANTITY } from "../model/duration";
+import { DurationSelect } from "./duration-select";
 
 interface CartItemProps {
-  item: CartItemType;
-  onQuantityChange: (id: number, quantity: number) => void;
-  onDurationChange: (id: number, duration: '30-d' | '90-d' | '1-y') => void;
-  onRemove: (id: number) => void;
+  item: CartItemModel;
   subtotal: number;
-  index: number;
-  isLast: boolean;
-  dropdownOpen: number | null;
-  onDropdownToggle: (id: number | null) => void;
+  isLast?: boolean;
+  onQuantityChange: (id: number, quantity: number) => void;
+  onDurationChange: (id: number, duration: Duration) => void;
+  onRemove: (id: number) => void;
 }
 
-// Опции периодов для привилегий
-const durationOptions = [
-  { value: '30-d', label: '30 дней' },
-  { value: '90-d', label: '90 дней' },
-  { value: '1-y', label: '1 год' }
-];
-
-// Максимальное количество для покупки товара
-const MAX_QUANTITY = 999;
-
-// Компонент для отрисовки выпадающего меню через портал
-const DropdownPortal = ({ 
-  isOpen, 
-  buttonRef, 
-  children,
-  onClose 
-}: { 
-  isOpen: boolean, 
-  buttonRef: React.RefObject<HTMLButtonElement | null>, 
-  children: React.ReactNode,
-  onClose: () => void 
+const ProductBadge: React.FC<{ type: CartItemModel["product"]["type"] }> = ({
+  type,
 }) => {
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  // Обновление позиции при прокрутке и при изменении размеров окна
-  useEffect(() => {
-    if (!isOpen || !buttonRef.current) return;
-
-    // Функция для обновления позиции выпадающего списка
-    const updatePosition = () => {
-      if (buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom,
-          left: rect.left,
-          width: rect.width
-        });
-      }
-    };
-
-    // Инициализация позиции
-    updatePosition();
-
-    // Добавляем слушатели событий
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-
-    // Очистка слушателей при размонтировании
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [isOpen, buttonRef]);
-
-  // Обработка клика вне дропдауна и клавиши Escape
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(event.target as Node) &&
-        buttonRef.current && 
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('keydown', handleEscapeKey);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [isOpen, onClose, buttonRef]);
-
-  if (!isOpen) return null;
-  
-  // Вычисляем корректное положение дропдауна относительно viewport
-  const adjustPosition = () => {
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
-    
-    let adjustedLeft = dropdownPosition.left;
-    
-    // Проверяем, не выходит ли дропдаун за правый край экрана
-    if (dropdownPosition.left + dropdownPosition.width > viewport.width - 10) {
-      adjustedLeft = viewport.width - dropdownPosition.width - 10;
-    }
-    
-    // Важная часть: используем только top из getBoundingClientRect() для фиксированного позиционирования
-    // без добавления window.scrollY
-    return {
-      top: `${dropdownPosition.top}px`,
-      left: `${adjustedLeft}px`,
-      width: `${dropdownPosition.width}px`,
-    };
-  };
-  
-  return ReactDOM.createPortal(
-    <div 
-      ref={dropdownRef}
-      className="fixed bg-slate-800 rounded-lg shadow-lg overflow-hidden border border-slate-700 z-50"
-      style={adjustPosition()}
-      role="listbox"
-      aria-orientation="vertical"
-    >
-      {children}
-    </div>,
-    document.body
+  const isSubscription = type === "subscription";
+  return (
+    <p className="flex items-center text-sm text-slate-400">
+      <span
+        className={`mr-2 inline-block h-2 w-2 rounded-full ${
+          isSubscription ? "bg-amber-400" : "bg-blue-400"
+        }`}
+      />
+      {isSubscription ? "Привилегия" : "Ключ"}
+    </p>
   );
 };
 
-const CartItem: React.FC<CartItemProps> = ({
+const ProductAvatar: React.FC<{ name: string; icon?: string }> = ({
+  name,
+  icon,
+}) => {
+  if (icon) {
+    return (
+      <div className="relative mr-4 flex-shrink-0">
+        <div className="absolute inset-0 rounded-lg bg-amber-400/20 blur-md" />
+        <Image
+          src={icon}
+          alt={name}
+          width={56}
+          height={56}
+          className="relative z-10 rounded-lg"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative mr-4 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600">
+      <div className="absolute inset-0 rounded-lg bg-white/10" />
+      <span className="relative z-10 text-xl font-bold text-white">
+        {name.charAt(0).toUpperCase()}
+      </span>
+    </div>
+  );
+};
+
+export const CartItem: React.FC<CartItemProps> = ({
   item,
+  subtotal,
+  isLast = false,
   onQuantityChange,
   onDurationChange,
   onRemove,
-  subtotal,
-  isLast,
-  dropdownOpen,
-  onDropdownToggle
 }) => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  
-  // Обработчик прямого ввода количества
-  const handleQuantityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0 && value <= MAX_QUANTITY) {
-      onQuantityChange(item.product.id, value);
-    }
-  };
-
-  // Обработчик для подтверждения ввода при потере фокуса
-  const handleQuantityBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (isNaN(value) || value < 1) {
-      // Если введено некорректное значение, устанавливаем 1
-      onQuantityChange(item.product.id, 1);
-    } else if (value > MAX_QUANTITY) {
-      // Если введено значение выше максимального, устанавливаем максимум
-      onQuantityChange(item.product.id, MAX_QUANTITY);
-    }
-  };
+  const { product, quantity, duration } = item;
 
   return (
     <div
-      className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-6 ${
-        !isLast ? 'border-b border-slate-700/50' : ''
-      } hover:bg-slate-700/30 transition-colors`}
+      className={`grid grid-cols-1 items-center gap-4 p-6 transition-colors hover:bg-slate-700/30 md:grid-cols-12 ${
+        !isLast ? "border-b border-slate-700/50" : ""
+      }`}
     >
-      <div className="col-span-1 md:col-span-6 flex items-center">
-        {item.product.icon ? (
-          <div className="relative">
-            <div className="absolute inset-0 bg-amber-400/20 rounded-lg blur-md"></div>
-            <Image
-              src="/api/placeholder/56/56"
-              alt={item.product.name}
-              width={56}
-              height={56}
-              className="mr-4 rounded-lg relative z-10"
+      {/* Продукт */}
+      <div className="col-span-1 flex items-center md:col-span-6">
+        <ProductAvatar name={product.name} icon={product.icon} />
+        <div>
+          <h3 className="text-lg font-bold text-white">{product.name}</h3>
+          <ProductBadge type={product.type} />
+        </div>
+      </div>
+
+      {/* Цена за единицу */}
+      <div className="col-span-1 text-left md:col-span-2 md:text-center">
+        <div className="mb-1 text-sm text-slate-400 md:hidden">Цена:</div>
+        <div className="font-bold text-amber-400">{product.price} ₽</div>
+      </div>
+
+      {/* Срок / Количество */}
+      <div className="col-span-1 text-left md:col-span-2 md:text-center">
+        {product.type === "subscription" ? (
+          <>
+            <div className="mb-1 text-sm text-slate-400 md:hidden">Срок:</div>
+            <DurationSelect
+              value={duration}
+              onChange={(newDuration) =>
+                onDurationChange(product.id, newDuration)
+              }
             />
-          </div>
-        ) : (
-          <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg mr-4 flex items-center justify-center relative">
-            <div className="absolute inset-0 bg-white/10 rounded-lg"></div>
-            <span className="text-white font-bold text-xl">{item.product.name.charAt(0)}</span>
-          </div>
-        )}
-        <div>
-          <h3 className="font-bold text-white text-lg">{item.product.name}</h3>
-          <p className="text-sm text-slate-400 flex items-center">
-            {item.product.type === 'subscription' ? (
-              <>
-                <span className="inline-block w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
-                <span>Привилегия</span>
-              </>
-            ) : (
-              <>
-                <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                <span>Ключ</span>
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-      
-      <div className="col-span-1 md:col-span-2 text-left md:text-center">
-        <div className="md:hidden text-slate-400 text-sm mb-1">Цена:</div>
-        <div className="text-amber-400 font-bold">{item.product.price}</div>
-      </div>
-      
-      <div className="col-span-1 md:col-span-2 text-left md:text-center">
-        {item.product.type === 'subscription' ? (
-          <>
-            <div className="md:hidden text-slate-400 text-sm mb-1">Срок:</div>
-            <div className="relative">
-              <button 
-                ref={buttonRef}
-                className="bg-slate-700 text-white w-full h-10 rounded-lg flex items-center justify-between px-3 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDropdownToggle(dropdownOpen === item.product.id ? null : item.product.id);
-                }}
-                aria-haspopup="listbox"
-                aria-expanded={dropdownOpen === item.product.id}
-                aria-label="Выбрать период подписки"
-              >
-                <span>
-                  {durationOptions.find(opt => opt.value === item.duration)?.label || '30 дней'}
-                </span>
-                <ChevronDown size={16} className={`transition-transform duration-300 ${dropdownOpen === item.product.id ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {/* Выпадающее меню через портал */}
-              <DropdownPortal 
-                isOpen={dropdownOpen === item.product.id} 
-                buttonRef={buttonRef}
-                onClose={() => onDropdownToggle(null)}
-              >
-                {durationOptions.map((option) => (
-                  <div 
-                    key={option.value}
-                    className={`px-4 py-3 cursor-pointer hover:bg-slate-700 text-white transition-colors ${item.duration === option.value ? 'bg-amber-500/20 font-medium' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDurationChange(item.product.id, option.value as '30-d' | '90-d' | '1-y');
-                      onDropdownToggle(null);
-                    }}
-                    role="option"
-                    aria-selected={item.duration === option.value}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onDurationChange(item.product.id, option.value as '30-d' | '90-d' | '1-y');
-                        onDropdownToggle(null);
-                      }
-                    }}
-                  >
-                    {option.label}
-                  </div>
-                ))}
-              </DropdownPortal>
-            </div>
           </>
         ) : (
           <>
-            <div className="md:hidden text-slate-400 text-sm mb-1">Количество:</div>
-            <div className="flex items-center">
-              <button
-                onClick={() => item.quantity > 1 && onQuantityChange(item.product.id, item.quantity - 1)}
-                className={`bg-slate-700 text-white w-10 h-10 rounded-l-lg flex items-center justify-center ${
-                  item.quantity > 1 ? 'hover:bg-slate-600 active:bg-slate-500' : 'opacity-50 cursor-not-allowed'
-                } transition-colors`}
-                disabled={item.quantity <= 1}
-                aria-label="Уменьшить количество"
-              >
-                -
-              </button>
-              <input
-                type="text"
-                value={item.quantity}
-                onChange={handleQuantityInputChange}
-                onBlur={handleQuantityBlur}
-                className="bg-slate-800 text-white w-12 h-10 text-center focus:outline-none focus:ring-2 focus:ring-amber-400/50 border-x border-slate-600"
-                aria-label="Количество товара"
-                max={MAX_QUANTITY}
-                min={1}
-                role="spinbutton"
-                aria-valuemin={1}
-                aria-valuemax={MAX_QUANTITY}
-                aria-valuenow={item.quantity}
-              />
-              <button
-                onClick={() => item.quantity < MAX_QUANTITY && onQuantityChange(item.product.id, item.quantity + 1)}
-                className={`bg-slate-700 text-white w-10 h-10 rounded-r-lg flex items-center justify-center ${
-                  item.quantity < MAX_QUANTITY ? 'hover:bg-slate-600 active:bg-slate-500' : 'opacity-50 cursor-not-allowed'
-                } transition-colors`}
-                disabled={item.quantity >= MAX_QUANTITY}
-                aria-label="Увеличить количество"
-              >
-                +
-              </button>
+            <div className="mb-1 text-sm text-slate-400 md:hidden">
+              Количество:
             </div>
+            <QuantityInput
+              value={quantity}
+              max={MAX_QUANTITY}
+              onChange={(newQty: number) =>
+                onQuantityChange(product.id, newQty)
+              }
+            />
           </>
         )}
       </div>
-      
-      <div className="col-span-1 md:col-span-2 flex justify-between md:justify-end items-center">
+
+      {/* Итого + удаление */}
+      <div className="col-span-1 flex items-center justify-between md:col-span-2 md:justify-end">
         <div>
-          <div className="md:hidden text-slate-400 text-sm mb-1">Сумма:</div>
-          <div className="text-white font-bold">{subtotal} ₽</div>
+          <div className="mb-1 text-sm text-slate-400 md:hidden">Сумма:</div>
+          <div className="font-bold text-white">{subtotal} ₽</div>
         </div>
-        <button 
-          onClick={() => onRemove(item.product.id)}
-          className="text-slate-400 hover:text-red-400 p-2 rounded-full hover:bg-slate-700 transition-colors"
+        <button
+          type="button"
+          onClick={() => onRemove(product.id)}
           aria-label="Удалить товар"
+          className="ml-4 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-700 hover:text-red-400"
         >
           <Trash2 size={20} />
         </button>
@@ -335,5 +139,3 @@ const CartItem: React.FC<CartItemProps> = ({
     </div>
   );
 };
-
-export default CartItem;

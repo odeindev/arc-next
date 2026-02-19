@@ -22,6 +22,7 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
 
   React.useEffect(() => {
     setInputValue(String(value));
+    setError(null);
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +52,10 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
   };
 
   const decrement = () => {
-    if (value > min) onChange(value - 1);
+    if (value > min) {
+      setError(null);
+      onChange(value - 1);
+    }
   };
 
   const increment = () => {
@@ -111,7 +115,11 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
         </button>
       </div>
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" aria-live="assertive" className="text-xs text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import { Product } from "../../public/data/products";
 export interface CartItem {
   product: Product;
   quantity: number;
-  duration?: "30-d" | "90-d" | "180-d" | "1-y";
+  duration?: Duration;
 }
 
 interface CartState {

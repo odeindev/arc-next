@@ -1,5 +1,3 @@
-// shared/ui/quantity-input/QuantityInput.tsx
-
 "use client";
 
 import React, { useState } from "react";
@@ -11,6 +9,17 @@ interface QuantityInputProps {
   onChange: (value: number) => void;
 }
 
+const keyForms: Record<Intl.LDMLPluralRule, string> = {
+  one: "ключ",
+  few: "ключа",
+  many: "ключей",
+  other: "ключей",
+  two: "ключа",
+  zero: "ключей",
+};
+const pr = new Intl.PluralRules("ru");
+const keyWord = (n: number) => keyForms[pr.select(n)];
+
 export const QuantityInput: React.FC<QuantityInputProps> = ({
   value,
   min = 1,
@@ -19,10 +28,15 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState(String(value));
   const [error, setError] = useState<string | null>(null);
+  const suppressErrorClear = React.useRef(false);
+  const errorId = React.useId();
 
   React.useEffect(() => {
     setInputValue(String(value));
-    setError(null);
+    if (!suppressErrorClear.current) {
+      setError(null);
+    }
+    suppressErrorClear.current = false;
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,9 +57,10 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
       setInputValue(String(min));
       onChange(min);
     } else if (parsed > max) {
+      suppressErrorClear.current = true;
       setInputValue(String(max));
       onChange(max);
-      setError(`Нельзя купить более ${max} ключей одного типа за раз`);
+      setError(`Нельзя купить более ${max} ${keyWord(max)} одного типа за раз`);
     } else {
       setInputValue(String(parsed));
     }
@@ -60,10 +75,20 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
 
   const increment = () => {
     if (value >= max) {
-      setError(`Нельзя купить более ${max} ключей одного типа за раз`);
+      setError(`Нельзя купить более ${max} ${keyWord(max)} одного типа за раз`);
       return;
     }
     onChange(value + 1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      increment();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      decrement();
+    }
   };
 
   const btnBase =
@@ -92,11 +117,14 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
           value={inputValue}
           onChange={handleChange}
           onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           aria-label="Количество товара"
           role="spinbutton"
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={value}
+          aria-invalid={error ? true : undefined}
+          aria-errormessage={error ? errorId : undefined}
           className="h-10 w-12 border-x border-slate-600 bg-slate-800 text-center text-white focus:outline-none focus:ring-2 focus:ring-amber-400/50"
         />
 
@@ -116,7 +144,12 @@ export const QuantityInput: React.FC<QuantityInputProps> = ({
       </div>
 
       {error && (
-        <p role="alert" aria-live="assertive" className="text-xs text-red-400">
+        <p
+          id={errorId}
+          role="alert"
+          aria-live="assertive"
+          className="text-xs text-red-400"
+        >
           {error}
         </p>
       )}

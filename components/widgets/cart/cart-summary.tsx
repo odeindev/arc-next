@@ -1,9 +1,9 @@
 // components/cart/CartSummary.tsx
 
-import React from 'react';
-import Link from 'next/link';
-import { Trash2, PackageCheck, Undo } from 'lucide-react';
-import { Button } from '@/components/shared/ui';
+import React from "react";
+import Link from "next/link";
+import { Trash2, PackageCheck, Undo } from "lucide-react";
+import { Button } from "@/components/shared/ui";
 
 interface CartSummaryProps {
   total: number;
@@ -15,9 +15,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ total, onClearCart }) => {
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800/70 backdrop-blur-sm rounded-xl p-6 shadow-xl">
       <div className="flex flex-col sm:flex-row items-start sm:items-center mb-6 md:mb-0">
         <Link href="/shop">
-          <button
-            className="flex items-center text-slate-300 hover:text-red-400 hover:bg-slate-700/50 px-4 py-2 rounded-lg transition-colors"
-          >
+          <button className="flex items-center text-slate-300 hover:text-red-400 hover:bg-slate-700/50 px-4 py-2 rounded-lg transition-colors">
             <Undo size={20} className="mr-2" />
             Вернуться назад
           </button>
@@ -37,11 +35,11 @@ const CartSummary: React.FC<CartSummaryProps> = ({ total, onClearCart }) => {
             {total} ₽
           </div>
         </div>
-        <Button 
+        <Button
           color="green"
           text="Оформить заказ"
           icon={<PackageCheck className="" />}
-          className="w-full md:w-64 group relative overflow-hidden shadow-lg shadow-green-500/10" 
+          className="w-full md:w-64 group relative overflow-hidden shadow-lg shadow-green-500/10"
         />
       </div>
     </div>

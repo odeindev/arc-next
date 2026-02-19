@@ -2,12 +2,13 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { Duration } from "../entities/cart/model/types";
 import { Product } from "../../public/data/products";
 
 export interface CartItem {
   product: Product;
   quantity: number;
-  duration?: "30-d" | "90-d" | "1-y";
+  duration?: "30-d" | "90-d" | "180-d" | "1-y";
 }
 
 interface CartState {
@@ -19,10 +20,7 @@ interface CartState {
   addItem: (product: Product, quantity?: number) => Promise<void>;
   removeItem: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
-  updateDuration: (
-    productId: number,
-    duration: "30-d" | "90-d" | "1-y",
-  ) => void;
+  updateDuration: (productId: number, duration: Duration) => void;
   clearCart: () => void;
   isInCart: (productId: number) => boolean;
   getItem: (productId: number) => CartItem | undefined;
@@ -31,6 +29,7 @@ interface CartState {
 export const durationMultipliers = {
   "30-d": 1,
   "90-d": 2.5,
+  "180-d": 4.5,
   "1-y": 8,
 };
 
@@ -134,10 +133,7 @@ const useCartStore = create<CartState>()(
         }));
       },
 
-      updateDuration: (
-        productId: number,
-        duration: "30-d" | "90-d" | "1-y",
-      ) => {
+      updateDuration: (productId: number, duration: Duration) => {
         set((state) => ({
           items: state.items.map((item) =>
             item.product.id === productId ? { ...item, duration } : item,

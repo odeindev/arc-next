@@ -1,6 +1,6 @@
 // entities/cart/model/types.ts
 
-export type Duration = "30-d" | "90-d" | "1-y";
+export type Duration = "30-d" | "90-d" | "180-d" | "1-y";
 
 export interface CartProduct {
   id: number;

@@ -15,7 +15,7 @@ export const products: Product[] = [
     id: 1,
     name: "Ghost",
     type: "subscription",
-    price: 500,
+    price: 250,
     description:
       "Идеальная привилегия для начинающих игроков. Всё, что нужно, чтобы спокойно освоиться на сервере.",
     benefits: [
@@ -29,7 +29,7 @@ export const products: Product[] = [
     id: 2,
     name: "Hero",
     type: "subscription",
-    price: 1000,
+    price: 500,
     description:
       "Больше возможностей для опытных игроков. Включает все преимущества Ghost и многое другое.",
     benefits: [
@@ -44,7 +44,7 @@ export const products: Product[] = [
     id: 3,
     name: "Titan",
     type: "subscription",
-    price: 1500,
+    price: 750,
     description:
       "Расширенные возможности для преданных игроков. Включает все преимущества Hero и дополнительные бонусы.",
     benefits: [
@@ -59,7 +59,7 @@ export const products: Product[] = [
     id: 4,
     name: "God",
     type: "subscription",
-    price: 2000,
+    price: 1000,
     description:
       "Максимальные возможности для истинных ценителей. Включает в себя все привилегии и эксклюзивные возможности.",
     benefits: [
@@ -74,7 +74,7 @@ export const products: Product[] = [
     id: 5,
     name: "Необычный ключ",
     type: "key",
-    price: 50,
+    price: 10,
     description:
       "Ключ для необычного кейса. Шанс получить редкие предметы и ресурсы.",
     icon: "/icons/uncommon-key.png",
@@ -83,7 +83,7 @@ export const products: Product[] = [
     id: 6,
     name: "Редкий ключ",
     type: "key",
-    price: 100,
+    price: 15,
     description:
       "Ключ для редкого кейса. Повышенный шанс получения ценных ресурсов и предметов.",
     icon: "/icons/rare-key.png",
@@ -92,7 +92,7 @@ export const products: Product[] = [
     id: 7,
     name: "Мифический ключ",
     type: "key",
-    price: 250,
+    price: 25,
     description:
       "Ключ для мифического кейса. Содержит высокие шансы на эксклюзивные предметы и редкие ресурсы.",
     icon: "/icons/mythic-key.png",
@@ -101,7 +101,7 @@ export const products: Product[] = [
     id: 8,
     name: "Легендарный ключ",
     type: "key",
-    price: 500,
+    price: 40,
     description:
       "Ключ для легендарного кейса. Гарантирует получение самых редких и ценных предметов на сервере.",
     icon: "/icons/legendary-key.png",

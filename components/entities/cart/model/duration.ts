@@ -10,6 +10,7 @@ export interface DurationOption {
 export const DURATION_OPTIONS: DurationOption[] = [
   { value: "30-d", label: "30 дней" },
   { value: "90-d", label: "90 дней" },
+  { value: "180-d", label: "180 дней" },
   { value: "1-y", label: "1 год" },
 ];
 

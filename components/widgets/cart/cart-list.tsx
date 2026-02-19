@@ -9,7 +9,10 @@ import { useCartCalculations } from "@/components/entities/cart/model/useCartCal
 interface CartListProps {
   items: CartItemType[];
   onQuantityChange: (id: number, quantity: number) => void;
-  onDurationChange: (id: number, duration: "30-d" | "90-d" | "1-y") => void;
+  onDurationChange: (
+    id: number,
+    duration: "30-d" | "90-d" | "180-d" | "1-y",
+  ) => void;
   onRemove: (id: number) => void;
 }
 

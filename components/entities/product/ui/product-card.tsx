@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/shared/ui';
-import { Product } from '@/public/data/products';
-import { ShoppingCart, MinusCircle, PlusCircle, Info } from 'lucide-react';
+import React from "react";
+import Image from "next/image";
+import { Button } from "@/components/shared/ui";
+import { Product } from "@/public/data/products";
+import { ShoppingCart, MinusCircle, PlusCircle, Info } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -26,7 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Badge для товара в корзине */}
       {isInCart && (
         <div className="absolute top-0 right-0 bg-green-500 text-white rounded-bl-lg px-3 py-1 text-sm font-bold z-10">
-          <ShoppingCart size={16} />        
+          <ShoppingCart size={16} />
         </div>
       )}
 
@@ -47,7 +47,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : (
             <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg mr-4 flex items-center justify-center relative">
               <div className="absolute inset-0 bg-white/10 rounded-lg"></div>
-              <span className="text-white font-bold text-xl">{product.name.charAt(0)}</span>
+              <span className="text-white font-bold text-xl">
+                {product.name.charAt(0)}
+              </span>
             </div>
           )}
           <div>
@@ -55,7 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.name}
             </h3>
             <p className="text-sm text-slate-400 flex items-center">
-              {product.type === 'subscription' ? (
+              {product.type === "subscription" ? (
                 <>
                   <span className="inline-block w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
                   Привилегия
@@ -71,34 +73,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Цена */}
-        <div className="text-amber-400 font-bold text-lg mb-3">{product.price}</div>
+        <div className="text-amber-400 font-bold text-lg mb-3">
+          {product.price} ₽
+        </div>
 
         {/* Описание */}
-        <p className="text-slate-300 text-sm mb-6 line-clamp-2" title={product.description}>
+        <p
+          className="text-slate-300 text-sm mb-6 line-clamp-2"
+          title={product.description}
+        >
           {product.description}
         </p>
 
         {/* Кнопки */}
         <div className="flex gap-2 items-center">
-          <Button 
-            color="blue" 
-            className="flex-1 py-1 flex items-center justify-center gap-1 text-sm font-medium" 
+          <Button
+            color="blue"
+            className="flex-1 py-1 flex items-center justify-center gap-1 text-sm font-medium"
             onClick={() => onOpenModal(product)}
             icon={<Info size={18} className="" />}
             text="Подробнее"
           />
 
           {isInCart ? (
-            <Button 
-              color="red" 
-              className="p-1 rounded-lg flex-shrink-0" 
+            <Button
+              color="red"
+              className="p-1 rounded-lg flex-shrink-0"
               onClick={onRemoveFromCart}
               icon={<MinusCircle size={20} />}
             />
           ) : (
-            <Button 
-              color="green" 
-              className="p-1 rounded-lg flex-shrink-0" 
+            <Button
+              color="green"
+              className="p-1 rounded-lg flex-shrink-0"
               onClick={onAddToCart}
               icon={<PlusCircle size={20} />}
             />

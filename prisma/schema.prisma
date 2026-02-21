@@ -37,6 +37,9 @@ model User {
   orders            Order[]
   emailVerifications EmailVerification[]
   passwordResets    PasswordReset[]
+  totpSecret       String?
+  minecraftAccount MinecraftAccount?
+  linkCodes        LinkCode[]
 }
 
 model EmailVerification {
@@ -126,4 +129,23 @@ model Payment {
   method      String   
   providerId  String   
   createdAt   DateTime @default(now())
+}
+
+model MinecraftAccount {
+  id        String   @id @default(nanoid(12))
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  username  String   @unique
+  authUUID  String   @unique
+  linkedAt  DateTime @default(now())
+}
+
+model LinkCode {
+  id        String   @id @default(nanoid(12))
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  code      String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

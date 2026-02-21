@@ -1,5 +1,7 @@
+// prisma/seed.ts
+
 import { PrismaClient, ProductType } from "@prisma/client";
-import { products } from "@/public/data/products";
+import { products } from "../public/data/products";
 import { hashSync } from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -37,7 +39,7 @@ async function up() {
     });
   }
 
-  console.log("🌱 Seed completed!");
+  console.log("Seed completed!");
 }
 
 async function down() {
@@ -70,7 +72,7 @@ async function down() {
       `TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`,
     );
   } catch (error) {
-    console.warn("⚠️ Ошибка при очистке данных:", error);
+    console.warn("Ошибка при очистке данных:", error);
   }
 }
 
@@ -79,7 +81,7 @@ async function main() {
     await down();
     await up();
   } catch (e) {
-    console.error("❌ Ошибка при сидировании:", e);
+    console.error("Ошибка при сидировании:", e);
   } finally {
     await prisma.$disconnect();
   }

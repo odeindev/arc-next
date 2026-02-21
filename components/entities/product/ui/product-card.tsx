@@ -25,7 +25,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-xl hover:shadow-amber-500/5 transition-all border border-slate-700/50 transform hover:scale-[1.01] duration-300 group">
       {/* Badge для товара в корзине */}
       {isInCart && (
-        <div className="absolute top-0 right-0 bg-green-500 text-white rounded-bl-lg px-3 py-1 text-sm font-bold z-10">
+        <div
+          suppressHydrationWarning
+          className="absolute top-0 right-0 bg-green-500 text-white rounded-bl-lg px-3 py-1 text-sm font-bold z-10"
+        >
           <ShoppingCart size={16} />
         </div>
       )}

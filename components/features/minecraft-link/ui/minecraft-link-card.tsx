@@ -14,7 +14,7 @@ interface MinecraftLinkCardProps {
   className?: string;
 }
 
-type CardState = "idle" | "loading" | "code_shown" | "success" | "error";
+type CardState = "idle" | "loading" | "code_shown" | "error";
 
 export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
   linkedUsername,
@@ -28,6 +28,7 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
   const [currentUsername, setCurrentUsername] = useState(
     linkedUsername ?? null,
   );
+  const handleExpire = React.useCallback(() => setState("idle"), []);
 
   // Запрашиваем код у API
   const handleGenerateCode = async () => {
@@ -49,9 +50,13 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
   // Копируем команду в буфер
   const handleCopy = async () => {
     if (!code) return;
-    await navigator.clipboard.writeText(`/link ${code}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(`/link ${code}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — optionally show an error toast
+    }
   };
 
   // Отвязка аккаунта (заглушка — реализуешь эндпоинт позже)
@@ -64,7 +69,6 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
       setState("idle");
     } catch {
       setErrorMsg("Не удалось отвязать аккаунт.");
-      setState("error");
     }
   };
 
@@ -122,7 +126,7 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
           className={cn("flex flex-col gap-4", className)}
         >
           {/* Инструкция */}
-          <p className="text-sm text-gray-400 leading-relaxed">
+          <p className="text-gray-400 leading-relaxed">
             Введи команду в игре в течение{" "}
             <span className="text-white font-medium">10 минут</span>:
           </p>
@@ -147,14 +151,11 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
           </div>
 
           {/* Прогресс-бар 10 минут */}
-          <CodeTimer
-            durationMs={10 * 60 * 1000}
-            onExpire={() => setState("idle")}
-          />
+          <CodeTimer durationMs={10 * 60 * 1000} onExpire={handleExpire} />
 
           <button
             onClick={handleGenerateCode}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors w-fit"
+            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-300 transition-colors w-fit"
           >
             <RefreshCw size={12} /> Сгенерировать новый код
           </button>
@@ -189,7 +190,7 @@ export const MinecraftLinkCard: React.FC<MinecraftLinkCardProps> = ({
           </>
         ) : (
           <>
-            <Link2 size={15} />
+            <Link2 size={24} />
             Получить код привязки
           </>
         )}
@@ -227,7 +228,7 @@ const CodeTimer: React.FC<CodeTimerProps> = ({ durationMs, onExpire }) => {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between text-sm text-gray-500">
+      <div className="flex justify-between text-gray-500">
         <span>Код действителен</span>
         <span
           className={cn("", progress < 0.2 ? "text-red-400" : "text-gray-400")}

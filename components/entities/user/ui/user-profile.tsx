@@ -100,7 +100,7 @@ const UserProfile: React.FC<Props> = ({ className, ...providedProps }) => {
     balance: providedProps.balance || 0.0,
     registrationDate: providedProps.registrationDate || "---",
     lastLogin: providedProps.lastLogin || "---",
-    lastPurchase: providedProps.lastPurchase || "---",
+    lastPurchase: providedProps.lastPurchase ?? null,
     onlinePlayers: providedProps.onlinePlayers || 0,
     totalPlayers: providedProps.totalPlayers || 0,
   });
@@ -195,7 +195,7 @@ const UserProfile: React.FC<Props> = ({ className, ...providedProps }) => {
                 <Image
                   src={avatar}
                   alt="Аватар игрока"
-                  layout="fill"
+                  fill
                   className="object-cover"
                 />
               ) : (

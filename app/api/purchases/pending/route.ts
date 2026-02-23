@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     .flatMap((order) =>
       order.items.map((item) => ({
         orderId: order.id,
-        itemId: item.productId,
+        itemId: item.productName,
         itemName: item.productName,
         duration: item.duration,
         authUUID: order.user.minecraftAccount!.authUUID,

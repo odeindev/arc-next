@@ -40,7 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="relative mr-4">
               <div className="absolute inset-0 bg-amber-400/20 rounded-lg blur-md"></div>
               <Image
-                src="/api/placeholder/56/56"
+                src="/favicon.ico"
                 alt={product.name}
                 width={56}
                 height={56}

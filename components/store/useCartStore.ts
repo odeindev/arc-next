@@ -1,5 +1,3 @@
-// store/useCartStore.ts
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Duration } from "../entities/cart/model/types";
@@ -14,7 +12,9 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isLoading: boolean;
+  _hasHydrated: boolean;
 
+  setHasHydrated: (value: boolean) => void;
   fetchCart: () => Promise<void>;
   syncWithServer: () => Promise<void>;
   addItem: (product: Product, quantity?: number) => Promise<void>;
@@ -38,27 +38,13 @@ const useCartStore = create<CartState>()(
     (set, get) => ({
       isLoading: false,
       items: [],
+      _hasHydrated: false,
 
-      // TODO: заменить на fetch("/api/cart") когда будет бэкенд
-      fetchCart: async () => {
-        // persist автоматически восстанавливает данные из localStorage
-      },
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
 
-      // TODO: раскомментировать когда будет бэкенд
-      syncWithServer: async () => {
-        // try {
-        //   const response = await fetch("/api/cart", {
-        //     method: "PUT",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({ items: get().items }),
-        //   });
-        //   if (!response.ok) {
-        //     throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
-        //   }
-        // } catch (error) {
-        //   console.error("Error syncing cart with server:", error);
-        // }
-      },
+      fetchCart: async () => {},
+
+      syncWithServer: async () => {},
 
       addItem: async (product: Product, quantity = 1) => {
         const { items } = get();
@@ -97,25 +83,6 @@ const useCartStore = create<CartState>()(
             }
           }
         }
-
-        // TODO: раскомментировать когда будет бэкенд
-        // try {
-        //   const response = await fetch("/api/cart/items", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({
-        //       productId: product.id,
-        //       quantity,
-        //       duration: product.type === "subscription" ? "30-d" : undefined,
-        //     }),
-        //   });
-        //   if (!response.ok) {
-        //     throw new Error(`Failed to add item: ${response.status} ${response.statusText}`);
-        //   }
-        // } catch (error) {
-        //   console.error("Error adding item to cart:", error);
-        //   set({ items: previousItems });
-        // }
       },
 
       removeItem: (productId: number) => {
@@ -155,6 +122,9 @@ const useCartStore = create<CartState>()(
     }),
     {
       name: "cart-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     },
   ),
 );
